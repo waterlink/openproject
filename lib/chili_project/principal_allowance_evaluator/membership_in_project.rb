@@ -1,6 +1,6 @@
 #-- copyright
 # OpenProject is a project management system.
-# Copyright (C) 2012-2014 the OpenProject Foundation (OPF)
+# Copyright (C) 2012-2013 the OpenProject Foundation (OPF)
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License version 3.
@@ -26,12 +26,17 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ChiliProject::PrincipalAllowanceEvaluator::Default < ChiliProject::PrincipalAllowanceEvaluator::Base
-  def allowed_in_project_scope(action, project)
+class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProject::PrincipalAllowanceEvaluator::Base
+
+  def applicable?(action, project)
+    project.present?
+  end
+
+  def joins(action, project)
     users = User.arel_table
-    roles = Role.arel_table.alias("roles_project")
-    members = Member.arel_table.alias("members_project")
-    member_roles = MemberRole.arel_table.alias("member_roles_project")
+    roles = roles_table
+    members = members_table
+    member_roles = member_roles_table
 
     member_join_condition = users[:id].eq(members[:user_id])
     member_roles_join_condition = member_roles[:member_id].eq(members[:id])
@@ -47,50 +52,28 @@ class ChiliProject::PrincipalAllowanceEvaluator::Default < ChiliProject::Princip
     User.joins(joins.join_sources)
   end
 
-  def allowed_in_project_condition(action, project)
-    roles = Role.arel_table.alias("roles_project")
-    members = Member.arel_table.alias("members_project")
+  def condition(action, project)
+    roles = roles_table
+    members = members_table
 
     roles['permissions'].matches("%#{action}%").and(members['project_id'].eq(project.id))
   end
 
-  def allowed_user_agnostic_scope(action, project)
-    users = User.arel_table
-    roles = Role.arel_table.alias("roles_user_agnostic")
-    members = Member.arel_table.alias("member_user_agnostic")
+  private
 
-    fallback_role = if @user.anonymous?
-                      Role.anonymous
-                    else
-                      Role.non_member
-                    end
-
-    permission_matches = roles[:permissions].matches("%#{action}%")
-    role_id = roles[:id].eq(fallback_role.id)
-
-    on_condition = role_id.and(permission_matches)
-
-    members_join_condition = users[:id].eq(members[:user_id]).and(members[:project_id].eq(project.id))
-
-    agnostic_scope = users.join(roles, Arel::Nodes::OuterJoin)
-                          .on(on_condition)
-                          .join(members, Arel::Nodes::OuterJoin)
-                          .on(members_join_condition).join_sources
-
-    User.joins(agnostic_scope)
+  def roles_table
+    Role.arel_table.alias("roles_#{ alias_suffix }")
   end
 
-  def allowed_user_agonstic_condition(action, project)
-    members = Member.arel_table.alias("member_user_agnostic")
-    roles = Role.arel_table.alias("roles_user_agnostic")
-
-    members[:id].eq(nil).and(roles[:id].not_eq(nil))
+  def members_table
+    Member.arel_table.alias("members_#{ alias_suffix }")
   end
 
-  def allowed_globally_scope(action)
-    roles = Role.arel_table
+  def member_roles_table
+    MemberRole.arel_table.alias("member_#{ alias_suffix }")
+  end
 
-    User.includes(:members => :roles)
-        .where(roles['permissions'].matches("%#{action}%"))
+  def alias_suffix
+    "memberships_in_project"
   end
 end
