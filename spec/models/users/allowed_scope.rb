@@ -52,7 +52,6 @@ describe User, 'allowed_to?' do
     anonymous.save!
   end
 
-  #todo user being admin
   #todo action with name that is part of another action, check that that will not allow something
 
   describe "w/ the context being a project

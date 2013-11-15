@@ -26,7 +26,7 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::PrincipalAllowanceEvaluator::Base
+class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::PrincipalAllowanceEvaluator::Base
 
   def applicable?(action, project)
     project.present? && project.is_public?
@@ -56,8 +56,14 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
   def condition(condition, action, project)
     members = members_table
     roles = roles_table
+    users = User.arel_table
 
-    add_condition = roles.grouping(roles[:id].not_eq(nil).and(members[:id].eq(nil)))
+
+    only_anonymous_user = users[:id].eq(User.anonymous.id)
+    no_member = members[:id].eq(nil)
+    role_allowed = roles[:id].not_eq(nil)
+
+    add_condition = roles.grouping(role_allowed.and(no_member).and(only_anonymous_user))
 
     condition.or(add_condition)
   end
@@ -70,7 +76,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
 #    else
 #      Role.non_member
 #    end
-    Role.non_member.id
+    Role.anonymous.id
   end
 
   def roles_table
@@ -86,7 +92,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
   end
 
   def alias_suffix
-    "non_member"
+    "anonymous"
   end
 
   def matches_condition(action)
