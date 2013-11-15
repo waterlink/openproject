@@ -28,11 +28,11 @@
 
 class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::PrincipalAllowanceEvaluator::Base
 
-  def applicable?(action, project)
+  def self.applicable?(action, project)
     project.nil?
   end
 
-  def joins(action, project)
+  def self.joins(action, project)
     users = User.arel_table
     roles = roles_table
 
@@ -49,7 +49,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::Pr
     User.joins(agnostic_scope.join_sources)
   end
 
-  def condition(condition, action, project)
+  def self.condition(condition, action, project)
 
     add_condition = roles_table[:id].not_eq(nil)
 
@@ -59,23 +59,23 @@ class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::Pr
 
   private
 
-  def fallback_role
+  def self.fallback_role
     Role.anonymous.id
   end
 
-  def roles_table
+  def self.roles_table
     Role.arel_table.alias("roles_#{ alias_suffix }")
   end
 
-  def members_table
+  def self.members_table
     Member.arel_table.alias("members_#{ alias_suffix }")
   end
 
-  def alias_suffix
+  def self.alias_suffix
     "any_anonymous"
   end
 
-  def matches_condition(action)
+  def self.matches_condition(action)
     roles = roles_table
 
     condition = case action

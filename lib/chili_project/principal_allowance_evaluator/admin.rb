@@ -28,14 +28,14 @@
 
 class ChiliProject::PrincipalAllowanceEvaluator::Admin < ChiliProject::PrincipalAllowanceEvaluator::Base
 
-  def applicable?(action, project)
+  def self.applicable?(action, project)
     true
   end
 
-  def joins(action, project)
+  def self.joins(action, project)
   end
 
-  def condition(condition, action, project)
+  def self.condition(condition, action, project)
     users = users_table
 
     add_condition = users[:admin].eq(true)
@@ -45,11 +45,11 @@ class ChiliProject::PrincipalAllowanceEvaluator::Admin < ChiliProject::Principal
 
   private
 
-  def users_table
+  def self.users_table
     User.arel_table
   end
 
-  def alias_suffix
+  def self.alias_suffix
     "admin"
   end
 end

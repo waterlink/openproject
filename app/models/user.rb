@@ -226,33 +226,6 @@ class User < Principal
     Project.find(options.fetch(:project)).users.like(query)
   end
 
-  def self.allowed(action, context = nil)
-    evaluators = self.registered_allowance_evaluators.collect do |evaluator|
-      evaluator.new(nil) # will have to altered as it used to be a user
-    end
-
-    scopes = Hash.new do |h, k|
-      h[k] = User.where(Arel::Nodes::Equality.new(1, 1))
-    end
-
-    condition = Arel::Nodes::Equality.new(1, 0)
-
-    evaluators.each do |evaluator|
-      if evaluator.applicable?(action, context)
-        scopes[evaluator.identifier] = scopes[evaluator.identifier].merge(evaluator.joins(action, context))
-        condition = evaluator.condition(condition, action, context)
-      end
-    end
-
-    scope = User.where("1=1")
-
-    scopes.values.each do |join|
-      scope = scope.merge(join)
-    end
-
-    scope.where(condition)
-  end
-
   def self.register_allowance_evaluator(filter)
     self.registered_allowance_evaluators ||= []
 
@@ -270,6 +243,8 @@ class User < Principal
       end
     end
   end
+
+  include User::Allowed
 
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::NonMember
@@ -616,95 +591,6 @@ class User < Principal
     end
   end
 
-  # Return true if the user is allowed to do the specified action on a specific context
-  # Action can be:
-  # * a parameter-like Hash (eg. :controller => '/projects', :action => 'edit')
-  # * a permission Symbol (eg. :edit_project)
-  # Context can be:
-  # * a project : returns true if user is allowed to do the specified action on this project
-  # * a group of projects : returns true if user is allowed on every project
-  # * nil with options[:global] set : check if user has at least one role allowed for this action,
-  #   or falls back to Non Member / Anonymous permissions depending if the user is logged
-  def allowed_to?(action, context, options={})
-    if action.is_a?(Hash) && action[:controller]
-      if action[:controller].to_s.starts_with?("/")
-        action = action.dup
-        action[:controller] = action[:controller][1..-1]
-      end
-
-      action = Redmine::AccessControl.allowed_symbols(action)
-    end
-
-    if context.is_a?(Project)
-      allowed_to_in_project?(action, context, options)
-    elsif context.is_a?(Array)
-      # Authorize if user is authorized on every element of the array
-      context.present? && context.all? do |project|
-        allowed_to?(action, project ,options)
-      end
-    elsif options[:global]
-      allowed_to_globally?(action, options)
-    else
-      false
-    end
-  end
-
-  def allowed_to_in_project?(action, project, options = {})
-    initialize_allowance_evaluators
-
-    # No action allowed on archived projects
-    return false unless project.active?
-    # No action allowed on disabled modules
-
-    case action
-    when Symbol
-      return false unless project.allows_to?(action)
-    when Array
-      action = action.select { |a| project.allows_to?(a) }
-
-      return false if action.empty?
-    end
-
-    # Admin users are authorized for anything else
-    return true if admin?
-
-    allowed_in_context(action, project)
-  end
-
-  # Is the user allowed to do the specified action on any project?
-  # See allowed_to? for the actions and valid options.
-  def allowed_to_globally?(action, options = {})
-    # Admin users are always authorized
-    return true if admin?
-
-    allowed_in_context(action, nil)
-  end
-
-  def allowed_in_context(action, project)
-    initialize_allowance_evaluators
-
-    scopes = Hash.new do |h, k|
-      h[k] = User.where(Arel::Nodes::Equality.new(1, 1))
-    end
-
-    condition = Arel::Nodes::Equality.new(1, 0)
-
-    @registered_allowance_evaluators.each do |evaluator|
-      if evaluator.applicable?(action, project)
-        scopes[evaluator.identifier] = scopes[evaluator.identifier].merge(evaluator.joins(action, project))
-        condition = evaluator.condition(condition, action, project)
-      end
-    end
-
-    scope = User.where("1=1")
-
-    scopes.values.each do |join|
-      scope = scope.merge(join)
-    end
-
-    scope.where(condition).where(id: id).count == 1
-  end
-
   # These are also implemented as strong_parameters, so also see
   # app/modles/permitted_params.rb
   # Delete these if everything in the UsersController uses strong_parameters.
@@ -836,20 +722,6 @@ class User < Principal
   end
 
   private
-
-  def initialize_allowance_evaluators
-    @registered_allowance_evaluators ||= self.class.registered_allowance_evaluators.collect do |evaluator|
-      evaluator.new(self)
-    end
-  end
-
-  def candidates_for_global_allowance
-    @registered_allowance_evaluators.map(&:global_granting_candidates).flatten.uniq
-  end
-
-  def candidates_for_project_allowance project
-    @registered_allowance_evaluators.map{ |f| f.project_granting_candidates(project) }.flatten.uniq
-  end
 
   def former_passwords_include?(password)
     return false if Setting[:password_count_former_banned].to_i == 0
