@@ -226,6 +226,33 @@ class User < Principal
     Project.find(options.fetch(:project)).users.like(query)
   end
 
+  def self.allowed(action, context = nil)
+    evaluators = self.registered_allowance_evaluators.collect do |evaluator|
+      evaluator.new(nil) # will have to altered as it used to be a user
+    end
+
+    scopes = Hash.new do |h, k|
+      h[k] = User.where(Arel::Nodes::Equality.new(1, 1))
+    end
+
+    condition = Arel::Nodes::Equality.new(1, 0)
+
+    evaluators.each do |evaluator|
+      if evaluator.applicable?(action, context)
+        scopes[evaluator.identifier] = scopes[evaluator.identifier].merge(evaluator.joins(action, context))
+        condition = evaluator.condition(condition, action, context)
+      end
+    end
+
+    scope = User.where("1=1")
+
+    scopes.values.each do |join|
+      scope = scope.merge(join)
+    end
+
+    scope.where(condition)
+  end
+
   def self.register_allowance_evaluator(filter)
     self.registered_allowance_evaluators ||= []
 
@@ -248,6 +275,7 @@ class User < Principal
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::NonMember
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyMembership
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyNonMember
+  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::Admin
 
   # Returns the user that matches provided login and password, or nil
   def self.try_to_login(login, password)

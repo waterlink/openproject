@@ -39,7 +39,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
 
     permission_matches = matches_condition(action)
 
-    role_id = roles[:id].eq(fallback_role.id)
+    role_id = roles[:id].in(fallback_role)
 
     on_condition = role_id.and(permission_matches)
 
@@ -49,8 +49,6 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
                           .on(on_condition)
                           .join(members, Arel::Nodes::OuterJoin)
                           .on(members_join_condition)
-
-
 
     User.joins(agnostic_scope.join_sources)
   end
@@ -67,11 +65,12 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
   private
 
   def fallback_role
-    if @user.anonymous?
-      Role.anonymous
-    else
-      Role.non_member
-    end
+#    if @user.anonymous?
+#      Role.anonymous
+#    else
+#      Role.non_member
+#    end
+    [Role.anonymous.id, Role.non_member.id]
   end
 
   def roles_table
