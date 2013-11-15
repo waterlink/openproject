@@ -275,7 +275,6 @@ class User < Principal
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::NonMember
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::Anonymous
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyMembership
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyNonMember
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous
   register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::Admin
 

@@ -323,6 +323,24 @@ describe User, 'allowed_to?' do
   end
 
   describe "w/o the context being a project
+            w/ an existing project
+            w/o the user being member in the project
+            w/ non member role having the permission" do
+
+    before do
+      FactoryGirl.create(:project)
+
+      non_member = Role.non_member
+      non_member.permissions << action
+      non_member.save
+    end
+
+    it "should be be empty" do
+      User.allowed(action).should be_empty
+    end
+  end
+
+  describe "w/o the context being a project
             w/ the user being member in a project
             w/o the role having the necessary permission
             w/ anonymous role having the permission" do

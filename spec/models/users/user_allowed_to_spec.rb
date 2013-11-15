@@ -344,8 +344,8 @@ describe User, 'allowed_to?' do
         member.save!
       end
 
-      it "should be true" do
-        user.allowed_to?(:add_work_packages, nil, global: true).should be_true
+      it "should be false" do
+        user.allowed_to?(:add_work_packages, nil, global: true).should be_false
       end
     end
 
@@ -358,8 +358,8 @@ describe User, 'allowed_to?' do
         non_member.save!
       end
 
-      it "should be true" do
-        user.allowed_to?(:add_work_packages, nil, global: true).should be_true
+      it "should be false" do
+        user.allowed_to?(:add_work_packages, nil, global: true).should be_false
       end
     end
 
@@ -389,7 +389,7 @@ describe User, 'allowed_to?' do
       end
 
       it "should be true" do
-        user.allowed_to?( { :controller => 'projects', :action => 'settings' }, nil, global: true).should be_true
+        user.allowed_to?( { :controller => 'projects', :action => 'settings' }, nil, global: true).should be_false
       end
     end
 
