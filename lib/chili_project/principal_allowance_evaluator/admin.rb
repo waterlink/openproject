@@ -32,9 +32,6 @@ class ChiliProject::PrincipalAllowanceEvaluator::Admin < ChiliProject::Principal
     true
   end
 
-  def self.joins(action, project)
-  end
-
   def self.condition(condition, action, project)
     users = users_table
 

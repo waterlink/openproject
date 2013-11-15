@@ -32,7 +32,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::Princ
     project.present? && project.is_public?
   end
 
-  def self.joins(action, project)
+  def self.joins(scope, action, project)
     users = User.arel_table
     roles = roles_table
     members = members_table
@@ -46,12 +46,12 @@ class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::Princ
 
     members_join_condition = users[:id].eq(members[:user_id]).and(members[:project_id].eq(project.id))
 
-    agnostic_scope = users.join(roles, Arel::Nodes::OuterJoin)
+    anonymous_scope = users.join(roles, Arel::Nodes::OuterJoin)
                           .on(on_condition)
                           .join(members, Arel::Nodes::OuterJoin)
                           .on(members_join_condition)
 
-    User.joins(agnostic_scope.join_sources)
+    scope.joins(anonymous_scope.join_sources)
   end
 
   def self.condition(condition, action, project)

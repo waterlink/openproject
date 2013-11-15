@@ -32,7 +32,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProj
     project.present?
   end
 
-  def self.joins(action, project)
+  def self.joins(scope, action, project)
     users = User.arel_table
     roles = roles_table
     members = members_table
@@ -50,7 +50,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProj
                  .join(roles, Arel::Nodes::OuterJoin)
                  .on(roles_join_condition)
 
-    User.joins(joins.join_sources)
+    scope.joins(joins.join_sources)
   end
 
   def self.condition(condition, action, project)

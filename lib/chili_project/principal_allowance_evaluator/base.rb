@@ -27,8 +27,12 @@
 #++
 
 class ChiliProject::PrincipalAllowanceEvaluator::Base
-  def self.applicable?(action, project)
+  def self.applicable?(action, context)
     false
+  end
+
+  def self.joins(scope, action, context)
+    scope
   end
 
   def self.identifier

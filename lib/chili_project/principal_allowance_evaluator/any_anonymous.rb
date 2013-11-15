@@ -32,7 +32,7 @@ class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::Pr
     project.nil?
   end
 
-  def self.joins(action, project)
+  def self.joins(scope, action, project)
     users = User.arel_table
     roles = roles_table
 
@@ -43,10 +43,10 @@ class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::Pr
 
     on_condition = role_id.and(permission_matches).and(only_anonymous_user)
 
-    agnostic_scope = users.join(roles, Arel::Nodes::OuterJoin)
-                          .on(on_condition)
+    anonymous_scope = users.join(roles, Arel::Nodes::OuterJoin)
+                           .on(on_condition)
 
-    User.joins(agnostic_scope.join_sources)
+    scope.joins(anonymous_scope.join_sources)
   end
 
   def self.condition(condition, action, project)

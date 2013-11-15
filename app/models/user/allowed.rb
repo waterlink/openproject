@@ -106,23 +106,15 @@ module User::Allowed
     end
 
     def allowed(action, context = nil)
-      scopes = Hash.new do |h, k|
-        h[k] = User.where(Arel::Nodes::Equality.new(1, 1))
-      end
+      scope = self.where(Arel::Nodes::Equality.new(1, 1))
 
       condition = Arel::Nodes::Equality.new(1, 0)
 
       registered_allowance_evaluators.each do |evaluator|
         if evaluator.applicable?(action, context)
-          scopes[evaluator.identifier] = scopes[evaluator.identifier].merge(evaluator.joins(action, context))
+          scope = evaluator.joins(scope, action, context)
           condition = evaluator.condition(condition, action, context)
         end
-      end
-
-      scope = User.where("1=1")
-
-      scopes.values.each do |join|
-        scope = scope.merge(join)
       end
 
       scope.where(condition)
