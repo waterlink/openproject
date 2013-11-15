@@ -38,7 +38,8 @@ class ChiliProject::PrincipalAllowanceEvaluator::AnyMembership < ChiliProject::P
     members = members_table
     member_roles = member_roles_table
 
-    member_join_condition = users[:id].eq(members[:user_id])
+    only_natural_users = users[:type].eq(User.to_s)
+    member_join_condition = users[:id].eq(members[:user_id]).and(only_natural_users)
     member_roles_join_condition = member_roles[:member_id].eq(members[:id])
     roles_join_condition = member_roles[:role_id].eq(roles[:id])
 

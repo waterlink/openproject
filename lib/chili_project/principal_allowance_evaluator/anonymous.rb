@@ -38,10 +38,11 @@ class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::Princ
     members = members_table
 
     permission_matches = matches_condition(action)
+    only_anonymous_user = users[:id].eq(User.anonymous.id)
 
     role_id = roles[:id].eq(fallback_role)
 
-    on_condition = role_id.and(permission_matches)
+    on_condition = role_id.and(permission_matches).and(only_anonymous_user)
 
     members_join_condition = users[:id].eq(members[:user_id]).and(members[:project_id].eq(project.id))
 
@@ -56,14 +57,11 @@ class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::Princ
   def condition(condition, action, project)
     members = members_table
     roles = roles_table
-    users = User.arel_table
 
-
-    only_anonymous_user = users[:id].eq(User.anonymous.id)
     no_member = members[:id].eq(nil)
     role_allowed = roles[:id].not_eq(nil)
 
-    add_condition = roles.grouping(role_allowed.and(no_member).and(only_anonymous_user))
+    add_condition = roles.grouping(role_allowed.and(no_member))
 
     condition.or(add_condition)
   end
@@ -71,11 +69,6 @@ class ChiliProject::PrincipalAllowanceEvaluator::Anonymous < ChiliProject::Princ
   private
 
   def fallback_role
-#    if @user.anonymous?
-#      Role.anonymous
-#    else
-#      Role.non_member
-#    end
     Role.anonymous.id
   end
 

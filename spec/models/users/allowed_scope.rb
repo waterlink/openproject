@@ -29,8 +29,7 @@
 require 'spec_helper'
 
 describe User, 'allowed_to?' do
-  let(:user) { FactoryGirl.build(:user) }
-  #let(:user2) { FactoryGirl.build(:user2) }
+  let(:user) { member.principal }
   let(:anonymous) { FactoryGirl.build(:anonymous) }
   let(:project) { FactoryGirl.build(:project, is_public: false) }
   let(:project2) { FactoryGirl.build(:project, is_public: false) }
@@ -38,11 +37,7 @@ describe User, 'allowed_to?' do
   let(:role2) { FactoryGirl.build(:role) }
   let(:anonymous_role) { FactoryGirl.build(:anonymous_role) }
   let(:member) { FactoryGirl.build(:member, :project => project,
-                                            :roles => [role],
-                                            :principal => user) }
-#  let(:member2) { FactoryGirl.build(:member, :project => project2,
-#                                             :roles => [role2],
-#                                             :principal => user) }
+                                            :roles => [role]) }
 
   let(:action) { :the_one }
   let(:other_action) { :another }
@@ -322,9 +317,8 @@ describe User, 'allowed_to?' do
       non_member.save
     end
 
-    it "should be anonymous and the user" do
-      # TODO: should this really be the case?
-      User.allowed(action).should =~ [anonymous, user]
+    it "should be be empty" do
+      User.allowed(action).should be_empty
     end
   end
 
@@ -346,5 +340,4 @@ describe User, 'allowed_to?' do
       User.allowed(action).should =~ [anonymous]
     end
   end
-
 end

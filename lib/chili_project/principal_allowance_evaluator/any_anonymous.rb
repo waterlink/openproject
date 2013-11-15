@@ -26,44 +26,42 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProject::PrincipalAllowanceEvaluator::Base
+class ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous < ChiliProject::PrincipalAllowanceEvaluator::Base
 
   def applicable?(action, project)
-    project.present?
+    project.nil?
   end
 
   def joins(action, project)
     users = User.arel_table
     roles = roles_table
-    members = members_table
-    member_roles = member_roles_table
 
-    only_natural_users = users[:type].eq(User.to_s)
-    member_join_condition = users[:id].eq(members[:user_id]).and(only_natural_users)
-    member_roles_join_condition = member_roles[:member_id].eq(members[:id])
-    roles_join_condition = member_roles[:role_id].eq(roles[:id])
+    permission_matches = matches_condition(action)
 
-    joins = users.join(members, Arel::Nodes::OuterJoin)
-                 .on(member_join_condition)
-                 .join(member_roles, Arel::Nodes::OuterJoin)
-                 .on(member_roles_join_condition)
-                 .join(roles, Arel::Nodes::OuterJoin)
-                 .on(roles_join_condition)
+    role_id = roles[:id].eq(fallback_role)
+    only_anonymous_user = users[:id].eq(User.anonymous.id)
 
-    User.joins(joins.join_sources)
+    on_condition = role_id.and(permission_matches).and(only_anonymous_user)
+
+    agnostic_scope = users.join(roles, Arel::Nodes::OuterJoin)
+                          .on(on_condition)
+
+    User.joins(agnostic_scope.join_sources)
   end
 
   def condition(condition, action, project)
-    members = members_table
 
-    project_condition = members['project_id'].eq(project.id)
+    add_condition = roles_table[:id].not_eq(nil)
 
-    add_condition = matches_condition(action).and(project_condition)
 
     condition.or(add_condition)
   end
 
   private
+
+  def fallback_role
+    Role.anonymous.id
+  end
 
   def roles_table
     Role.arel_table.alias("roles_#{ alias_suffix }")
@@ -73,12 +71,8 @@ class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProj
     Member.arel_table.alias("members_#{ alias_suffix }")
   end
 
-  def member_roles_table
-    MemberRole.arel_table.alias("member_#{ alias_suffix }")
-  end
-
   def alias_suffix
-    "memberships_in_project"
+    "any_anonymous"
   end
 
   def matches_condition(action)
@@ -102,3 +96,4 @@ class ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject < ChiliProj
     roles.grouping(condition)
   end
 end
+

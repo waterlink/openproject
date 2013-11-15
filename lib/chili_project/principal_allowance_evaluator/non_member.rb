@@ -40,13 +40,14 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
     permission_matches = matches_condition(action)
 
     role_id = roles[:id].eq(fallback_role)
+    only_natural_users = users[:type].eq(User.to_s)
 
-    on_condition = role_id.and(permission_matches)
+    role_condition = role_id.and(permission_matches).and(only_natural_users)
 
     members_join_condition = users[:id].eq(members[:user_id]).and(members[:project_id].eq(project.id))
 
     agnostic_scope = users.join(roles, Arel::Nodes::OuterJoin)
-                          .on(on_condition)
+                          .on(role_condition)
                           .join(members, Arel::Nodes::OuterJoin)
                           .on(members_join_condition)
 
@@ -57,7 +58,10 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
     members = members_table
     roles = roles_table
 
-    add_condition = roles.grouping(roles[:id].not_eq(nil).and(members[:id].eq(nil)))
+    role_has_permission = roles[:id].not_eq(nil)
+    no_member = members[:id].eq(nil)
+
+    add_condition = roles.grouping(role_has_permission.and(no_member))
 
     condition.or(add_condition)
   end
@@ -65,11 +69,6 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
   private
 
   def fallback_role
-#    if @user.anonymous?
-#      Role.anonymous
-#    else
-#      Role.non_member
-#    end
     Role.non_member.id
   end
 
@@ -110,4 +109,3 @@ class ChiliProject::PrincipalAllowanceEvaluator::NonMember < ChiliProject::Princ
     roles.grouping(condition)
   end
 end
-
