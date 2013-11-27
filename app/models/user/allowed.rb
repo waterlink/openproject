@@ -27,6 +27,24 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
+#   SELECT
+#   	"users".login,
+#   	"roles".name,
+#   	"roles".permissions
+#   FROM "users"
+#   LEFT OUTER JOIN "members"
+#   	ON "users"."id" = "members"."user_id" AND "users"."type" = 'User' AND "members"."project_id" = 5
+#   LEFT OUTER JOIN "member_roles"
+#   	ON "member_roles"."member_id" = "members"."id"
+#   LEFT OUTER JOIN "roles"
+#   	ON (
+#   		"members"."project_id" IS NULL AND "roles"."id" = 2 AND "users"."id" = 9998) /* Anonymous */
+#   		OR ("members"."project_id" IS NOT NULL AND "member_roles"."role_id" = "roles"."id") /* member in project */
+#   		OR ("members"."project_id" IS NULL AND "roles"."id" = 1 AND "users"."type" = 'User' ) /* non member */
+#   WHERE "users"."type" IN ('User', 'AnonymousUser', 'DeletedUser')
+#   AND "users"."id" = 5170 /* 5170 */
+#   AND "roles".permissions IS NOT NULL
+
 module User::Allowed
   def self.included(base)
     base.extend(ClassMethods)
@@ -61,7 +79,7 @@ module User::Allowed
       elsif context.is_a?(Array)
         # Authorize if user is authorized on every element of the array
         context.present? && context.all? do |project|
-          allowed_to?(action, project ,options)
+          allowed_to?(action, project, options)
         end
       elsif options[:global]
         allowed_to_globally?(action, options)
@@ -94,7 +112,80 @@ module User::Allowed
     end
 
     def allowed_in_context(action, project)
-      self.class.allowed(action, project).where(id: id).count == 1
+
+      return true if self.admin?
+
+      @permissions ||= Hash.new
+
+      permissions = if @permissions[project]
+        @permissions[project]
+      else
+        permissions = self.class.allowed(action, project).where(id: id).select('permissions')
+
+        permissions = permissions.map { |p| YAML::load(p.permissions) }.flatten
+
+        @permissions[project] = permissions
+      end
+
+      #binding.pry
+
+      (permissions & Array(action)).count > 0
+      #
+#      return true if self.admin?
+#
+#      if Array === action
+#        action.any? { |a| allowed_in_context(a, project) }
+#      else
+#        cached_permissions(project).include?(action)
+#      end
+    end
+
+    private
+
+    def cached_permissions(project)
+      @cached_permissions ||= Hash.new do |hash, context|
+        hash[context] = permissions_for_context(context)
+      end
+
+      @cached_permissions[project]
+    end
+
+    def permissions_for_context(project)
+      roles = Role.arel_table
+      members = Member.arel_table
+      member_roles = MemberRole.arel_table
+
+      joins = roles.join(member_roles, Arel::Nodes::OuterJoin)
+                   .on(member_roles[:role_id].eq(roles[:id]))
+                   .join(members, Arel::Nodes::OuterJoin)
+                   .on(member_roles[:member_id].eq(members[:id]))
+
+      membership_of_user = members[:user_id].eq(self.id)
+
+      condition = membership_of_user
+
+      if project
+        membership_in_project = members[:project_id].eq(project.id)
+
+        condition = condition.and membership_in_project
+
+        if project.is_public?
+          no_member = members[:id].eq(nil)
+          no_member_role = roles[:id].eq(Role.non_member.id)
+          non_member_condition = roles.grouping(no_member.and(no_member_role))
+
+          condition = condition.or non_member_condition
+        end
+      end
+
+
+      if anonymous?
+        condition = condition.or roles[:id].eq(Role.anonymous.id)
+      end
+
+      roles = Role.select(:permissions).joins(joins.join_sources).where(condition).all
+
+      roles.map(&:permissions).flatten.uniq
     end
   end
 
@@ -106,18 +197,86 @@ module User::Allowed
     end
 
     def allowed(action, context = nil)
-      scope = self.where(Arel::Nodes::Equality.new(1, 1))
+#      scope = self.where(Arel::Nodes::Equality.new(1, 1))
+#
+#      condition = Arel::Nodes::Equality.new(1, 0)
+#
+#      registered_allowance_evaluators.each do |evaluator|
+#        if evaluator.applicable?(action, context)
+#          scope = evaluator.joins(scope, action, context)
+#          condition = evaluator.condition(condition, action, context)
+#        end
+#      end
+#
+#      scope.where(condition)
+      members = Member.arel_table
+      member_roles = MemberRole.arel_table
+      roles = Role.arel_table
+      users = User.arel_table
 
-      condition = Arel::Nodes::Equality.new(1, 0)
+      members_join_condition = users['id'].eq(members['user_id']).and(users['type'].eq('User'))
+      members_join_condition = members_join_condition.and(members['project_id'].eq(context.id)) if context
 
-      registered_allowance_evaluators.each do |evaluator|
-        if evaluator.applicable?(action, context)
-          scope = evaluator.joins(scope, action, context)
-          condition = evaluator.condition(condition, action, context)
-        end
+      member_roles_join_condition = member_roles['member_id'].eq(members['id'])
+
+      member_in_project_condition = members.grouping(members['project_id'].not_eq(nil).and(member_roles['role_id'].eq(roles['id'])))
+
+      roles_join_condition = member_in_project_condition
+
+      if context && context.is_public?
+        non_member_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.non_member.id)).and(users['type'].eq('User')))
+        anonymous_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.anonymous.id)).and(users['id'].eq(User.anonymous.id)))
+
+        roles_join_condition = roles_join_condition
+                                .or(non_member_condition)
+                                .or(anonymous_condition)
+      elsif context.nil?
+        anonymous_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.anonymous.id)).and(users['id'].eq(User.anonymous.id)))
+
+        roles_join_condition = roles_join_condition
+                                .or(anonymous_condition)
       end
 
-      scope.where(condition)
+      users_joins = users.join(members, Arel::Nodes::OuterJoin)
+                         .on(members_join_condition)
+                         .join(member_roles, Arel::Nodes::OuterJoin)
+                         .on(member_roles_join_condition)
+                         .join(roles, Arel::Nodes::OuterJoin)
+                         .on(roles_join_condition)
+
+      User.joins(users_joins.join_sources)
+        .where(roles['permissions'].not_eq(nil))
     end
   end
 end
+#   SELECT
+#   	"users".login,
+#   	"roles".name,
+#   	"roles".permissions
+#   FROM "users"
+#   LEFT OUTER JOIN "members"
+#   	ON "users"."id" = "members"."user_id" AND "users"."type" = 'User' AND "members"."project_id" = 5
+#   LEFT OUTER JOIN "member_roles"
+#   	ON "member_roles"."member_id" = "members"."id"
+#   LEFT OUTER JOIN "roles"
+#   	ON (
+#   		"members"."project_id" IS NULL AND "roles"."id" = 2 AND "users"."id" = 9998) /* Anonymous */
+#   		OR ("members"."project_id" IS NOT NULL AND "member_roles"."role_id" = "roles"."id") /* member in project */
+#   		OR ("members"."project_id" IS NULL AND "roles"."id" = 1 AND "users"."type" = 'User' ) /* non member */
+#   WHERE "users"."type" IN ('User', 'AnonymousUser', 'DeletedUser')
+#   AND "users"."id" = 5170 /* 5170 */
+#   AND "roles".permissions IS NOT NULL
+#
+#
+#   SELECT "users".* FROM "users"
+#   LEFT OUTER JOIN "members"
+#     ON "users"."id" = "members"."user_id" AND "users"."type" = 'User' AND "members"."project_id" = 185
+#   LEFT OUTER JOIN "member_roles"
+#     ON "member_roles"."member_id" = "members"."id"
+#   LEFT OUTER JOIN "roles"
+#     ON ((("members"."project_id" IS NOT NULL AND "member_roles"."role_id" = "roles"."id") /* member in project */
+#     OR ("members"."project_id" IS NOT NULL AND "roles"."id" = 467 AND "users"."type" = 'User')) /* non member */
+#     OR ("members"."project_id" IS NULL AND "roles"."id" = 469 AND "users"."id" = 471)) /* Anonymous */
+#   WHERE "users"."type" IN ('User', 'AnonymousUser', 'DeletedUser', 'SystemUser')
+#   AND "users"."id" = 469
+#   AND ("roles"."permissions" IS NOT NULL)
