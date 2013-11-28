@@ -330,11 +330,12 @@ class Project < ActiveRecord::Base
         if Role.non_member.allowed_to?(permission) && !options[:member]
           statement_by_role[Role.non_member] = "#{Project.table_name}.is_public = #{connection.quoted_true}"
         end
-        user.projects_by_role.each do |role, projects|
-          if role.allowed_to?(permission)
-            statement_by_role[role] = "#{Project.table_name}.id IN (#{projects.collect(&:id).join(',')})"
-          end
-        end
+        project_ids = User.allowed(permission).where(id: user.id).where("permissions LIKE '%#{permission}%'").select("members.project_id")
+        #user.projects_by_role.each do |role, projects|
+        #  if role.allowed_to?(permission)
+            statement_by_role[:blubs] = "#{Project.table_name}.id IN (#{project_ids.collect(&:project_id).join(',')})" if project_ids.any?
+        #  end
+        #end
       else
         if Role.anonymous.allowed_to?(permission) && !options[:member]
           statement_by_role[Role.anonymous] = "#{Project.table_name}.is_public = #{connection.quoted_true}"
