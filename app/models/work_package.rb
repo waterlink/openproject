@@ -106,7 +106,7 @@ class WorkPackage < ActiveRecord::Base
 
   after_initialize :set_default_values
 
-  acts_as_watchable
+  acts_as_watchable :permission => :view_work_packages
 
   before_save :store_former_parent_id
 
@@ -698,13 +698,13 @@ class WorkPackage < ActiveRecord::Base
     end
     work_package
   end
-
-  # Override of acts_as_watchable#possible_watcher_users
-  # Restricts the result to project members for private as well as public projects
-  def possible_watcher_users
-    users = project.users
-    users.select {|user| possible_watcher?(user)}
-  end
+#
+#  # Override of acts_as_watchable#possible_watcher_users
+#  # Restricts the result to project members for private as well as public projects
+#  def possible_watcher_users
+#    users = project.users
+#    users.select {|user| possible_watcher?(user)}
+#  end
 
   # check if user is allowed to edit WorkPackage Journals.
   # see Redmine::Acts::Journalized::Permissions#journal_editable_by
