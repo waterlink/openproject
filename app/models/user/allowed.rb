@@ -140,6 +140,14 @@ module User::Allowed
 #      end
     end
 
+    def allowed_in_projects(action)
+      @project_ids ||= Hash.new do |h, k|
+        h[k] = User.allowed(k).where(id: self.id).where("permissions LIKE '%#{k}%'").select("members.project_id")
+      end
+
+      @project_ids[action]
+    end
+
     private
 
     def cached_permissions(project)

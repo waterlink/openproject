@@ -74,9 +74,9 @@ Redmine::AccessControl.map do |map|
                    :projects => [:show],
                    :projects => [:show],
                    :activities => [:index]
-                 },
-                 :public => true
-  map.permission :search_project, {:search => :index}, :public => true
+                 }#,
+#                 :public => true
+  map.permission :search_project, {:search => :index}#, :public => true
   map.permission :add_project, {
                                 :projects => [:new, :create],
                                 :members => [:paginate_users]
