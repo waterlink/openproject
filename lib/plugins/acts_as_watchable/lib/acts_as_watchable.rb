@@ -91,7 +91,14 @@ module Redmine
         def possible_watcher_users
           permission = self.class.acts_as_watchable_options[:permission]
 
-          User.allowed(permission, self.project).where("permissions LIKE '%#{permission}%'").select("DISTINCT(users.id)").order_by_name
+          role_table = Role.arel_table
+          users_table = User.arel_table
+
+          User.not_builtin
+              .allowed(nil, self.project)
+              .where(role_table[:permissions].matches(permission).or(users_table[:admin].eq(true)))
+              .select("DISTINCT(users.*)")
+              .order_by_name
           #User.not_builtin.tap do |users|
           #  if respond_to?(:visible?)
           #    users.select! {|user| possible_watcher?(user)}

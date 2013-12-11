@@ -204,19 +204,7 @@ module User::Allowed
       registered_allowance_evaluators << filter
     end
 
-    def allowed(action, context = nil)
-#      scope = self.where(Arel::Nodes::Equality.new(1, 1))
-#
-#      condition = Arel::Nodes::Equality.new(1, 0)
-#
-#      registered_allowance_evaluators.each do |evaluator|
-#        if evaluator.applicable?(action, context)
-#          scope = evaluator.joins(scope, action, context)
-#          condition = evaluator.condition(condition, action, context)
-#        end
-#      end
-#
-#      scope.where(condition)
+    def allowed(action = nil, context = nil)
       members = Member.arel_table
       member_roles = MemberRole.arel_table
       roles = Role.arel_table
@@ -252,8 +240,13 @@ module User::Allowed
                          .join(roles, Arel::Nodes::OuterJoin)
                          .on(roles_join_condition)
 
-      User.joins(users_joins.join_sources)
-        .where(roles['permissions'].not_eq(nil))
+      scope = User.joins(users_joins.join_sources)
+
+      if action.present?
+        scope.where(roles[:permissions].matches(action))
+      else
+        scope.where(roles[:permissions].not_eq(nil))
+      end
     end
   end
 end
