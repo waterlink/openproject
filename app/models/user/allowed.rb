@@ -127,17 +127,7 @@ module User::Allowed
         @permissions[project] = permissions
       end
 
-      #binding.pry
-
       (permissions & Array(action)).count > 0
-      #
-#      return true if self.admin?
-#
-#      if Array === action
-#        action.any? { |a| allowed_in_context(a, project) }
-#      else
-#        cached_permissions(project).include?(action)
-#      end
     end
 
     def allowed_in_projects(action)
@@ -242,11 +232,11 @@ module User::Allowed
 
       scope = User.joins(users_joins.join_sources)
 
-      if action.present?
-        scope.where(roles[:permissions].matches(action))
-      else
+#      if action.present?
+#        scope.where(roles[:permissions].matches(action))
+#      else
         scope.where(roles[:permissions].not_eq(nil))
-      end
+#      end
     end
   end
 end
