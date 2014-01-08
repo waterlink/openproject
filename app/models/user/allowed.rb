@@ -122,7 +122,7 @@ module User::Allowed
       else
         permissions = self.class.allowed(action, project).where(id: id).select('permissions')
 
-        permissions = permissions.map { |p| YAML::load(p.permissions) }.flatten
+        permissions = permissions.map { |p| YAML::load(p.permissions) }.flatten + Redmine::AccessControl.public_permissions.collect {|p| p.name}
 
         @permissions[project] = permissions
       end
