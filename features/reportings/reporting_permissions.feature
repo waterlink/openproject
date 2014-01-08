@@ -100,7 +100,6 @@ Feature: Reporting Permissions
   Scenario: Creating a reporting by a privileged user
      When I am already logged in as "privileged"
       And I go to the page of the project called "Santas Project"
-      And I toggle the "Timelines" submenu
       And I click on "Status reportings"
       And I click on "New reporting"
 
@@ -116,7 +115,6 @@ Feature: Reporting Permissions
           | Santas Project | World Domination     | Hallo Junge                     |
 
      When I go to the page of the project called "Santas Project"
-      And I toggle the "Timelines" submenu
       And I click on "Status reportings"
       And I follow link "Edit" for report "World Domination"
 
@@ -129,7 +127,6 @@ Feature: Reporting Permissions
     Given the user "observer" is a "view reportings" in the project "Santas Project"
       And I am already logged in as "observer"
      When I go to the page of the project called "Santas Project"
-      And I toggle the "Timelines" submenu
       And I click on "Status reportings"
      Then I should not see "New reporting"
 
@@ -141,7 +138,6 @@ Feature: Reporting Permissions
           | Santas Project | World Domination     | Hallo Junge                     |
       And I am already logged in as "editor"
      When I go to the page of the project called "Santas Project"
-      And I toggle the "Timelines" submenu
       And I click on "Status reportings"
 
      Then I should see "New reporting"
