@@ -32,7 +32,7 @@ describe Api::V2::PlanningElementTypesController do
   let (:current_user) { FactoryGirl.create(:admin) }
   let(:anonymous_role_with_permissions) do
     role = FactoryGirl.create(:anonymous_role)
-    role.update_attribute(:permissions, [:view_projects])
+    role.update_attribute(:permissions, [:view_project])
     role.save!
   end
 
@@ -65,7 +65,7 @@ describe Api::V2::PlanningElementTypesController do
       describe 'with only the standard type available' do
         it 'assigns an type array including the standard type' do
           get 'index', :project_id => project.identifier, :format => 'xml'
-          assigns(:types).should == project.types
+          assigns(:types).should =~ project.types
         end
 
         it 'renders the index builder template' do

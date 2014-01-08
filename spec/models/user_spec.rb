@@ -132,8 +132,8 @@ describe User do
                                   :user => user) }
 
       before do
-        issue.save!
         member.save!
+        issue.save!
         user.reload # the user object needs to know of its membership for the watcher to be valid
         watcher.save!
       end
