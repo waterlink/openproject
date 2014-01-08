@@ -132,7 +132,7 @@ module User::Allowed
 
     def allowed_in_projects(action)
       @project_ids ||= Hash.new do |h, k|
-        h[k] = User.allowed(k).where(id: self.id).where("permissions LIKE '%#{k}%'").select("members.project_id")
+        h[k] = User.allowed(k).where(id: self.id).select("members_allowed.project_id")
       end
 
       @project_ids[action]
@@ -200,6 +200,10 @@ module User::Allowed
       roles = Role.arel_table
       users = User.arel_table
 
+      members = members.alias('members_allowed')
+      member_roles = member_roles.alias('member_roles_allowed')
+      roles = roles.alias('roles_allowed')
+
       members_join_condition = users['id'].eq(members['user_id']).and(users['type'].eq('User'))
       members_join_condition = members_join_condition.and(members['project_id'].eq(context.id)) if context
 
@@ -232,11 +236,26 @@ module User::Allowed
 
       scope = User.joins(users_joins.join_sources)
 
-#      if action.present?
-#        scope.where(roles[:permissions].matches(action))
-#      else
-        scope.where(roles[:permissions].not_eq(nil))
-#      end
+      admin_condition = users[:admin].eq(true)
+
+
+      action_match_condition = if action.present?
+        action_array = Array(action)
+
+        action_match_condition = roles[:permissions].matches("%#{action_array[0]}%")
+
+        action_array[1..-1].each do |action|
+          action_match_condition = action_match_condition.or(roles[:permissions].matches("%#{action}%"))
+        end
+
+        action_match_condition
+      else
+        roles[:permissions].not_eq(nil)
+      end
+
+      condition = roles.grouping(action_match_condition).or(admin_condition)
+
+      scope.where(condition)
     end
   end
 end

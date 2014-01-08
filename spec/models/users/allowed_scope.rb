@@ -266,7 +266,8 @@ describe User, 'allowed_to?' do
 
   describe "w/o the context being a project
             w/o the project being public
-            w/o the user being member in the project" do
+            w/o the user being member in the project
+            w/ the user being admin" do
 
     before do
       user.update_attribute(:admin, true)

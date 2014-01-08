@@ -81,24 +81,26 @@ module Redmine
         end
 
         def possible_watcher?(user)
-         # if respond_to?(:visible?)
-         #   visible?(user)
-         # else
+          if respond_to?(:visible?)
+            visible?(user)
+          else
             warn watching_permitted_to_all_users_message
-         # end
+          end
         end
 
         def possible_watcher_users
           permission = self.class.acts_as_watchable_options[:permission]
 
-          role_table = Role.arel_table
-          users_table = User.arel_table
+          self.project.users.allowed(permission, self.project).order_by_name
 
-          User.not_builtin
-              .allowed(nil, self.project)
-              .where(role_table[:permissions].matches(permission).or(users_table[:admin].eq(true)))
-              .select("DISTINCT(users.*)")
-              .order_by_name
+   #       User.not_builtin
+   #           .allowed(permission, self.project)
+   #           .select("DISTINCT(users.*)")
+   #           .where(users_table[:admin].eq(false))
+   #           .order_by_name
+          #
+              #.allowed(role_table[:permissions].matches(permission), self.project)
+              #.where(role_table[:permissions].matches(permission).or(users_table[:admin].eq(true)))
           #User.not_builtin.tap do |users|
           #  if respond_to?(:visible?)
           #    users.select! {|user| possible_watcher?(user)}
