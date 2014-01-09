@@ -103,6 +103,20 @@ describe User, 'allowed_to?' do
       end
     end
 
+    describe "w/ the user being a member in the project
+              w/o the role having the necessary permission
+              w/ inquiring for a permission that is public" do
+      before do
+        project.is_public = false
+
+        member.save!
+      end
+
+      it "should be true" do
+        user.allowed_to?(:view_project, project).should be_true
+      end
+    end
+
     describe "w/o the user being member in the project
               w/ non member being allowed the action
               w/ the project being private" do
@@ -121,7 +135,7 @@ describe User, 'allowed_to?' do
       end
     end
 
-    describe "w/o the user being no member in the project
+    describe "w/o the user being member in the project
               w/ the project being public
               w/ non members being allowed the action" do
 
@@ -154,6 +168,22 @@ describe User, 'allowed_to?' do
 
       it "should be true" do
         anonymous.allowed_to?(:add_work_packages, project).should be_true
+      end
+    end
+
+    describe "w/ the user being anonymous
+              w/ the project being public
+              w/ querying for a public permission" do
+
+      before do
+        project.is_public = true
+        project.save!
+
+        anonymous_role.save!
+      end
+
+      it "should be true" do
+        anonymous.allowed_to?(:view_project, project).should be_true
       end
     end
 
@@ -358,8 +388,8 @@ describe User, 'allowed_to?' do
         non_member.save!
       end
 
-      it "should be false" do
-        user.allowed_to?(:add_work_packages, nil, global: true).should be_false
+      it "should be true" do
+        user.allowed_to?(:add_work_packages, nil, global: true).should be_true
       end
     end
 

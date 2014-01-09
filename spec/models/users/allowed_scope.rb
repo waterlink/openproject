@@ -41,6 +41,7 @@ describe User, 'allowed_to?' do
 
   let(:action) { :the_one }
   let(:other_action) { :another }
+  let(:public_action) { :view_project }
 
   before do
     user.save!
@@ -248,6 +249,37 @@ describe User, 'allowed_to?' do
     end
   end
 
+  describe "w/ the context being a project
+            w/o the project being public
+            w/ the user being member in the project
+            w/o the role having the permission
+            w/ the permission being public" do
+
+    before do
+      member.save!
+    end
+
+    it "should return the user and anonymous" do
+      User.allowed(public_action, project).should =~ [user, anonymous]
+    end
+  end
+
+  describe "w/ the context being a project
+            w/o the project being public
+            w/ the user being member in the project
+            w/o the role having the permission
+            w/ inquiring for multiple permissions
+            w/ one permission being public" do
+
+    before do
+      member.save!
+    end
+
+    it "should return the user and anonymous" do
+      User.allowed([action, public_action], project).should =~ [user, anonymous]
+    end
+  end
+
   describe "w/o the context being a project
             w/ the user being member in a project
             w/ the role having the necessary permission" do
@@ -336,8 +368,8 @@ describe User, 'allowed_to?' do
       non_member.save
     end
 
-    it "should be be empty" do
-      User.allowed(action).should be_empty
+    it "should return the user and anonymous" do
+      User.allowed(action).should == [user]
     end
   end
 
@@ -355,7 +387,7 @@ describe User, 'allowed_to?' do
       anonymous_role.save
     end
 
-    it "should be anonymous and the user" do
+    it "should be anonymous" do
       User.allowed(action).should =~ [anonymous]
     end
   end

@@ -120,14 +120,12 @@ module User::Allowed
       permissions = if @permissions[project]
         @permissions[project]
       else
-        permissions = self.class.allowed(action, project).where(id: id).select('permissions')
-
-        permissions = permissions.map { |p| YAML::load(p.permissions) }.flatten + Redmine::AccessControl.public_permissions.collect {|p| p.name}
+        permissions = Role.find_by_sql(self.class.allowed(nil, project).where(id: id).select('roles_allowed.*').to_sql)
 
         @permissions[project] = permissions
       end
 
-      (permissions & Array(action)).count > 0
+      Array(action).any? { |action| @permissions[project].any? { |role| role.allowed_to?(action) } }
     end
 
     def allowed_in_projects(action)
@@ -136,6 +134,13 @@ module User::Allowed
       end
 
       @project_ids[action]
+    end
+
+    def reload(options = nil)
+      # clear permission cache
+      # TODO: move this (and probably the whole cache) to a separet method/class
+      @permissions = Hash.new
+      super
     end
 
     private
@@ -213,17 +218,12 @@ module User::Allowed
 
       roles_join_condition = member_in_project_condition
 
-      if context && context.is_public?
+      if context.nil? || context.is_public?
         non_member_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.non_member.id)).and(users['type'].eq('User')))
         anonymous_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.anonymous.id)).and(users['id'].eq(User.anonymous.id)))
 
         roles_join_condition = roles_join_condition
                                 .or(non_member_condition)
-                                .or(anonymous_condition)
-      elsif context.nil?
-        anonymous_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.anonymous.id)).and(users['id'].eq(User.anonymous.id)))
-
-        roles_join_condition = roles_join_condition
                                 .or(anonymous_condition)
       end
 
@@ -240,18 +240,29 @@ module User::Allowed
 
 
       action_match_condition = if action.present?
-        action_array = Array(action)
+                                 action_array = Array(action)
+                                 public_permissions = Redmine::AccessControl.public_permissions.collect {|p| p.name }
 
-        action_match_condition = roles[:permissions].matches("%#{action_array[0]}%")
+                                 action_match_condition = if public_permissions.include? action
+                                                            Arel::Nodes::Equality.new(1, 1)
+                                                          else
+                                                            roles[:permissions].matches("%#{action_array[0]}%")
+                                                          end
 
-        action_array[1..-1].each do |action|
-          action_match_condition = action_match_condition.or(roles[:permissions].matches("%#{action}%"))
-        end
+                                 action_array[1..-1].each do |action|
+                                   condition = if public_permissions.include? action
+                                                 Arel::Nodes::Equality.new(1, 1)
+                                               else
+                                                 roles[:permissions].matches("%#{action_array[0]}%")
+                                               end
 
-        action_match_condition
-      else
-        roles[:permissions].not_eq(nil)
-      end
+                                   action_match_condition = action_match_condition.or(condition)
+                                 end
+
+                                 action_match_condition
+                               else
+                                 roles[:permissions].not_eq(nil)
+                               end
 
       condition = roles.grouping(action_match_condition).or(admin_condition)
 
