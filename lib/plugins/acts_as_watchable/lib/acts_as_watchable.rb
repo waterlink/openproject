@@ -91,23 +91,14 @@ module Redmine
         def possible_watcher_users
           permission = self.class.acts_as_watchable_options[:permission]
 
-          self.project.users.allowed(permission, self.project).order_by_name
+          # TODO: check for the login field which might also be used
+          # to order_by_name and must hence be included in the select.
+          # might also want to somehow extract those values programatically from user USER_FORMATS_STRUCTURE
+          # TODO: somehow get this standard #distinct method to work
 
-   #       User.not_builtin
-   #           .allowed(permission, self.project)
-   #           .select("DISTINCT(users.*)")
-   #           .where(users_table[:admin].eq(false))
-   #           .order_by_name
-          #
-              #.allowed(role_table[:permissions].matches(permission), self.project)
-              #.where(role_table[:permissions].matches(permission).or(users_table[:admin].eq(true)))
-          #User.not_builtin.tap do |users|
-          #  if respond_to?(:visible?)
-          #    users.select! {|user| possible_watcher?(user)}
-          #  else
-          #    warn watching_permitted_to_all_users_message
-          #  end
-          #end
+          selected_fields = (['DISTINCT(users.id)'] + User::USER_FORMATS_STRUCTURE.values.flatten.uniq.map(&:to_s)).join(', ')
+
+          self.project.users.allowed(permission, self.project).order_by_name.select(selected_fields)
         end
 
         # Returns an array of users that are proposed as watchers
