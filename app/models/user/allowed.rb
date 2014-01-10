@@ -238,35 +238,35 @@ module User::Allowed
 
       admin_condition = users[:admin].eq(true)
 
+      action_condition = action_match_condition(action, roles)
 
-      action_match_condition = if action.present?
-                                 action_array = Array(action)
-                                 public_permissions = Redmine::AccessControl.public_permissions.collect {|p| p.name }
-
-                                 action_match_condition = if public_permissions.include? action
-                                                            Arel::Nodes::Equality.new(1, 1)
-                                                          else
-                                                            roles[:permissions].matches("%#{action_array[0]}%")
-                                                          end
-
-                                 action_array[1..-1].each do |action|
-                                   condition = if public_permissions.include? action
-                                                 Arel::Nodes::Equality.new(1, 1)
-                                               else
-                                                 roles[:permissions].matches("%#{action_array[0]}%")
-                                               end
-
-                                   action_match_condition = action_match_condition.or(condition)
-                                 end
-
-                                 action_match_condition
-                               else
-                                 roles[:permissions].not_eq(nil)
-                               end
-
-      condition = roles.grouping(action_match_condition).or(admin_condition)
+      condition = roles.grouping(action_condition).or(admin_condition)
 
       scope.where(condition)
+    end
+
+    private
+
+    def action_match_condition(action, roles_table)
+      if action.present?
+        action_array = Array(action)
+
+        action_array.inject(Arel::Nodes::Equality.new(1, 0)) do |condition, action|
+          condition.or(neutral_or_action_match_condition(action, roles_table))
+        end
+      else
+        roles_table[:permissions].not_eq(nil)
+      end
+    end
+
+    def neutral_or_action_match_condition(action, roles_table)
+      public_permissions = Redmine::AccessControl.public_permissions.collect {|p| p.name }
+
+      if public_permissions.include? action
+        Arel::Nodes::Equality.new(1, 1)
+      else
+        roles_table[:permissions].matches("%#{action}%")
+      end
     end
   end
 end
