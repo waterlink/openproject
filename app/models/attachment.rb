@@ -57,10 +57,6 @@ class Attachment < ActiveRecord::Base
   self.storage_path = OpenProject::Configuration['attachments_storage_path'] || Rails.root.join('files').to_s
   self.namespace    = ''
 
-  def self.namespace
-    @@namespace.is_a?(Proc) ? @@namespace.call : @@namespace
-  end
-
   def filesize_below_allowed_maximum
     if self.filesize > Setting.attachment_max_size.to_i.kilobytes
       errors.add(:base, :too_long, :count => Setting.attachment_max_size.to_i.kilobytes)
@@ -197,6 +193,10 @@ class Attachment < ActiveRecord::Base
       end
     end
     {:files => attached, :unsaved => obj.unsaved_attachments}
+  end
+
+  def self.namespace
+    @@namespace.is_a?(Proc) ? @@namespace.call : @@namespace
   end
 
 private
