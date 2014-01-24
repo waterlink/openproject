@@ -41,7 +41,7 @@ describe WorkPackage do
   end
 
   describe '#possible_watcher_users' do
-    subject { work_package.possible_watcher_users }
+    subject { work_package.possible_watcher_users.map(&:id) }
 
     let!(:admin){ FactoryGirl.create(:admin) }
     let!(:anonymous_user){ FactoryGirl.create(:anonymous) }
@@ -64,19 +64,19 @@ describe WorkPackage do
         work_package.possible_watcher_users.sort.should == users_allowed_to_view_work_packages.sort
       end
 
-      it { should include(project_member) }
-      it { should_not include(admin) }
+      it { should include(project_member.id) }
+      it { should_not include(admin.id) }
 
       context 'and the non member role has the permission to view work packages' do
         include_context 'non member role has the permission to view work packages'
 
-        it { should_not include(non_member_user) }
+        it { should_not include(non_member_user.id) }
       end
 
       context 'and the anonymous role has the permission to view work packages' do
         include_context 'anonymous role has the permission to view work packages'
 
-        it { should_not include(anonymous_user) }
+        it { should_not include(anonymous_user.id) }
       end
     end
 
@@ -94,11 +94,11 @@ describe WorkPackage do
         work_package.possible_watcher_users.sort.should == users_allowed_to_view_work_packages.sort
       end
 
-      it { should include(project_member) }
+      it { should include(project_member.id) }
 
-      it { should_not include(admin) }
-      it { should_not include(non_member_user) }
-      it { should_not include(anonymous_user) }
+      it { should_not include(admin.id) }
+      it { should_not include(non_member_user.id) }
+      it { should_not include(anonymous_user.id) }
     end
   end
 
