@@ -116,6 +116,9 @@ class User < Principal
   scope :not_builtin,
         :conditions => "#{User.table_name}.status <> #{STATUSES[:builtin]}"
 
+  scope :builtin,
+        :conditions => "#{User.table_name}.status = #{STATUSES[:builtin]}"
+
   # Users blocked via brute force prevention
   # use lambda here, so time is evaluated on each query
   scope :blocked, lambda { create_blocked_scope(true) }
