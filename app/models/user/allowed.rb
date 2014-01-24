@@ -120,7 +120,7 @@ module User::Allowed
       permissions = if @permissions[project]
         @permissions[project]
       else
-        permissions = Role.find_by_sql(self.class.allowed(nil, project).where(id: id).select('roles_allowed.*').to_sql)
+        permissions = self.allowed_roles(nil, project)
 
         @permissions[project] = permissions
       end
@@ -130,7 +130,7 @@ module User::Allowed
 
     def allowed_in_projects(action)
       @project_ids ||= Hash.new do |h, k|
-        h[k] = User.allowed(k).where(id: self.id).select("members_allowed.project_id")
+        h[k] = User.allowed(k).where(id: self.id).select("members.project_id")
       end
 
       @project_ids[action]
@@ -141,6 +141,10 @@ module User::Allowed
       # TODO: move this (and probably the whole cache) to a separet method/class
       @permissions = Hash.new
       super
+    end
+
+    def allowed_roles(action, project = nil)
+      Role.find_by_sql(User.allowed(action, project).where(id: self.id).select("roles.*").to_sql)
     end
 
     private
@@ -199,74 +203,8 @@ module User::Allowed
       registered_allowance_evaluators << filter
     end
 
-    def allowed(action = nil, context = nil)
-      members = Member.arel_table
-      member_roles = MemberRole.arel_table
-      roles = Role.arel_table
-      users = User.arel_table
-
-      members = members.alias('members_allowed')
-      member_roles = member_roles.alias('member_roles_allowed')
-      roles = roles.alias('roles_allowed')
-
-      members_join_condition = users['id'].eq(members['user_id']).and(users['type'].eq('User'))
-      members_join_condition = members_join_condition.and(members['project_id'].eq(context.id)) if context
-
-      member_roles_join_condition = member_roles['member_id'].eq(members['id'])
-
-      member_in_project_condition = members.grouping(members['project_id'].not_eq(nil).and(member_roles['role_id'].eq(roles['id'])))
-
-      roles_join_condition = member_in_project_condition
-
-      if context.nil? || context.is_public?
-        non_member_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.non_member.id)).and(users['type'].eq('User')))
-        anonymous_condition = members.grouping(members['project_id'].eq(nil).and(roles['id'].eq(Role.anonymous.id)).and(users['id'].eq(User.anonymous.id)))
-
-        roles_join_condition = roles_join_condition
-                                .or(non_member_condition)
-                                .or(anonymous_condition)
-      end
-
-      users_joins = users.join(members, Arel::Nodes::OuterJoin)
-                         .on(members_join_condition)
-                         .join(member_roles, Arel::Nodes::OuterJoin)
-                         .on(member_roles_join_condition)
-                         .join(roles, Arel::Nodes::OuterJoin)
-                         .on(roles_join_condition)
-
-      scope = User.joins(users_joins.join_sources)
-
-      admin_condition = users[:admin].eq(true)
-
-      action_condition = action_match_condition(action, roles)
-
-      condition = roles.grouping(action_condition).or(admin_condition)
-
-      scope.where(condition)
-    end
-
-    private
-
-    def action_match_condition(action, roles_table)
-      if action.present?
-        action_array = Array(action)
-
-        action_array.inject(Arel::Nodes::Equality.new(1, 0)) do |condition, action|
-          condition.or(neutral_or_action_match_condition(action, roles_table))
-        end
-      else
-        roles_table[:permissions].not_eq(nil)
-      end
-    end
-
-    def neutral_or_action_match_condition(action, roles_table)
-      public_permissions = Redmine::AccessControl.public_permissions.collect {|p| p.name }
-
-      if public_permissions.include? action
-        Arel::Nodes::Equality.new(1, 1)
-      else
-        roles_table[:permissions].matches("%#{action}%")
-      end
+    def allowed(action = nil, context = nil, alias_prefix: "", admin_pass: true)
+      Allowance.users(project: context, permission: action)
     end
   end
 end

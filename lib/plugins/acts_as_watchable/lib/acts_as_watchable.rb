@@ -98,7 +98,7 @@ module Redmine
 
           selected_fields = (['DISTINCT(users.id)'] + User::USER_FORMATS_STRUCTURE.values.flatten.uniq.map(&:to_s)).join(', ')
 
-          self.project.users.allowed(permission, self.project).order_by_name.select(selected_fields)
+          User.allowed(permission, self.project, admin_pass: false).not_builtin.order_by_name.select(selected_fields)
         end
 
         # Returns an array of users that are proposed as watchers

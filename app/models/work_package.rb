@@ -68,9 +68,7 @@ class WorkPackage < ActiveRecord::Base
   # <<< issues.rb <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   scope :recently_updated, :order => "#{WorkPackage.table_name}.updated_at DESC"
-  scope :visible, lambda {|*args| { :include => :project,
-                                    :conditions => WorkPackage.visible_condition(args.first ||
-                                                                                 User.current) } }
+  scope :visible, ->(*args) { joins(:project).merge(Project.allowed(args.first || User.current, :view_work_packages)) }
 
   scope :in_status, lambda {|*args| where(:status_id => (args.first.respond_to?(:id) ? args.first.id : args.first))}
 
@@ -243,7 +241,7 @@ class WorkPackage < ActiveRecord::Base
 
   # Returns a SQL conditions string used to find all work units visible by the specified user
   def self.visible_condition(user, options={})
-    Project.allowed_to_condition(user, :view_work_packages, options)
+    Project.allowed_to_condition(user, :view_work_packages)
   end
 
   def self.done_ratio_disabled?
