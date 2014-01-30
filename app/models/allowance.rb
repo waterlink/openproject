@@ -30,20 +30,95 @@
 class Allowance
   include Scope
 
-  def self.projects(user: nil, permission: nil)
-    scope = Project.active
+#  def self.projects(user: nil, permission: nil)
+#    scope = Project.active
+#
+#    scope = scope.merge(module_permission_active(permission))
+#
+#    return scope if user.present? && user.admin?
+#
+#    scope.merge(permission_in(user, nil, permission))
+#  end
 
-    scope = scope.merge(module_permission_active(permission))
-
-    return scope if user.present? && user.admin?
-
-    scope.merge(permission_in(user, nil, permission))
-  end
-
-  def self.users(project: nil, permission: nil, admin_pass: true)
-    allowed(permission, project, admin_pass: true)
-  end
+#  def self.users(project: nil, permission: nil, admin_pass: true)
+#    allowed(permission, project, admin_pass: admin_pass)
+#  end
 #
 #  def self.roles(user: nil, project: nil, permission: nil)
 #  end
+
+  def self.scope(name, &block)
+    @scopes ||= []
+
+    allowance = Allowance.new
+
+    allowance.instance_eval(&block)
+
+    add_scope_method(name, allowance)
+
+    @scopes << allowance
+  end
+
+  def table(name, definition = nil)
+    table_class = definition || Class.new(Allowance::Table::Base) do
+      table name.to_s.singularize.camelize.constantize
+    end
+
+    new_table = table_class.new(self)
+
+    instance_variable_set("@#{name}".to_sym, new_table)
+    add_table name, table_class.model
+
+    define_singleton_method name do
+      instance_variable_get("@#{name}".to_sym)
+    end
+  end
+
+  def condition(name, definition)
+    instance_variable_set("@#{name}".to_sym, definition.new(self))
+
+    define_singleton_method name do
+      instance_variable_get("@#{name}".to_sym)
+    end
+  end
+
+  def scope_target(table)
+    @scope_target = table
+  end
+
+  def scope(options = {})
+    #TODO: check how to circumvent the uniq
+    @scope_target.scope(options).uniq
+  end
+
+  def tables(klass = nil)
+    @tables ||= {}
+
+    if klass
+      @tables[klass]
+    else
+      @tables.values
+    end
+  end
+
+  private
+
+  def add_table(name, model)
+    @tables ||= {}
+
+    @tables[model] = name
+  end
+
+  def self.add_scope_method(name, allowance)
+    method_body = ->(options = {}) { allowance.scope(options) }
+
+    eigenclass.send(:define_method, name, method_body)
+  end
+
+  def self.eigenclass
+    class << self; self; end;
+  end
 end
+
+require_relative 'allowance/user'
+require_relative 'allowance/project'

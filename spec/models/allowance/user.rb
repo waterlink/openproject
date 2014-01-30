@@ -69,7 +69,8 @@ describe User, 'allowed scope' do
 
  describe "w/ the context being a project
            w/o the project being public
-           w/o the user being member in the project" do
+           w/o the user being member in the project
+           w/ the user being admin" do
 
     before do
       user.update_attribute(:admin, true)
@@ -77,6 +78,21 @@ describe User, 'allowed scope' do
 
     it "should return the user" do
       Allowance.users(permission: action, project: project).should == [user]
+    end
+  end
+
+ describe "w/ the context being a project
+           w/o the project being public
+           w/o the user being member in the project
+           w/ the user being admin
+           w/o allowing the admin to pass" do
+
+    before do
+      user.update_attribute(:admin, true)
+    end
+
+    it "should return the user" do
+      Allowance.users(permission: action, project: project, admin_pass: false).should == []
     end
   end
 

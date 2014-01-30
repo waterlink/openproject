@@ -37,13 +37,18 @@ class Allowance
 
       private
 
-      def allowed(permission = nil, project = nil, admin_pass: true)
-        scope = User.scoped
+#      def allowed(permission = nil, project = nil, admin_pass: true)
+#        user_joins
 
-        scope = scope.merge(user_permission_in(project, permission, admin_pass: admin_pass))
-
-        scope.merge(module_permission_active(permission))
-      end
+#        condition = role_permitted(permission, admin_pass: admin_pass)
+#        Allowance.users({permission: permission, project: project, admin_pass: true})
+#                 .where(condition)
+#        scope = User.scoped
+#
+#        scope = scope.merge(user_permission_in(project, permission, admin_pass: admin_pass))
+#
+#        scope.merge(module_permission_active(permission))
+#      end
 
       def role_permitted(permission, admin_pass: true)
         action_condition = Role.permitted(permission).where_values
@@ -90,16 +95,45 @@ class Allowance
 
       private
 
-      def user_joins(user: nil, project: nil, permission: nil, admin_pass: admin_pass)
-        users_table.join(members_table, Arel::Nodes::OuterJoin)
-                   .on(members_user_join_condition(project))
-                   .join(member_roles_table, Arel::Nodes::OuterJoin)
-                   .on(member_roles_join_condition)
-                   .join(roles_table, Arel::Nodes::OuterJoin)
-                   .on(member_or_fallback_user_condition(project: project, permission: permission, admin_pass: admin_pass))
-                   .join(projects_table, Arel::Nodes::OuterJoin)
-                   .on(members_project_join_condition)
-      end
+#      def user_joins(user: nil, project: nil, permission: nil, admin_pass: true)
+#        Allowance.scope :users do
+#          table :users
+#          table :members
+#          table :member_roles
+#          table :roles
+#          table :projects
+#          table :enabled_modules
+#
+#          scope_target users
+#
+#          condition :users_memberships, Allowance::Condition::UsersMemberships
+#          condition :member_roles_id_equal, Allowance::Condition::MemberRolesIdEqual
+#          condition :project_member_or_fallback, Allowance::Condition::ProjectMemberOrFallback
+#          condition :members_projects_id_equal, Allowance::Condition::MemberProjectsIdEqual
+#          condition :module_enabled, Allowance::Condition::ModuleEnabled
+#
+#          users.left_join(members)
+#               .on(users_memberships)
+#               .left_join(member_roles)
+#               .on(member_roles_id_equal)
+#               .left_join(roles)
+#               .on(project_member_or_fallback)
+#               .left_join(projects)
+#               .on(members_projects_id_equal)
+#               .left_join(enabled_modules)
+#               .on(module_enabled)
+#        end
+#        Table::User.left_join(Table::Member.on(
+#
+#        users_table.join(members_table, Arel::Nodes::OuterJoin)
+#                   .on(members_user_join_condition(project))
+#                   .join(member_roles_table, Arel::Nodes::OuterJoin)
+#                   .on(member_roles_join_condition)
+#                   .join(roles_table, Arel::Nodes::OuterJoin)
+#                   .on(member_or_fallback_user_condition(project: project, permission: permission, admin_pass: admin_pass))
+#                   .join(projects_table, Arel::Nodes::OuterJoin)
+#                   .on(members_project_join_condition)
+#      end
 
       def project_joins(user: nil, project: nil, permission: nil)
         projects_table.join(members_table, Arel::Nodes::OuterJoin)
@@ -190,25 +224,25 @@ class Allowance
         end
       end
 
-      def roles_table
-        Role.arel_table
-      end
-
-      def members_table
-        Member.arel_table
-      end
-
-      def projects_table
-        Project.arel_table
-      end
-
-      def member_roles_table
-        MemberRole.arel_table
-      end
-
-      def users_table
-        User.arel_table
-      end
+#      def roles_table
+#        Role.arel_table
+#      end
+#
+#      def members_table
+#        Member.arel_table
+#      end
+#
+#      def projects_table
+#        Project.arel_table
+#      end
+#
+#      def member_roles_table
+#        MemberRole.arel_table
+#      end
+#
+#      def users_table
+#        User.arel_table
+#      end
     end
   end
 end

@@ -183,13 +183,14 @@ private
       action_array.inject(Arel::Nodes::Equality.new(1, 0)) do |condition, action|
         condition.or(neutral_or_action_match_condition(action))
       end
-    else
-      self.arel_table[:permissions].not_eq(nil)
     end
+   # else
+   #   #self.arel_table[:permissions].not_eq(nil)
+   # end
   end
 
   def self.neutral_or_action_match_condition(action)
-    public_permissions = Redmine::AccessControl.public_permissions.collect {|p| p.name }
+    public_permissions = Redmine::AccessControl.public_permissions.collect { |p| p.name }
 
     if public_permissions.include? action
       Arel::Nodes::Equality.new(1, 1)
