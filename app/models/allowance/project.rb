@@ -58,6 +58,6 @@ Allowance.scope :projects do
           .left_join(roles)
           .on(allowed_member_or_public_project)
           .left_join(enabled_modules)
-          .on(enabled_modules_of_project)#.and(permission_module_active))
-          .where(has_role_or_admin.and(project_and_module_active))#active))#(project_and_module_active))
+          .on(enabled_modules_of_project)
+          .where(has_role_or_admin.and(project_and_module_active))
 end

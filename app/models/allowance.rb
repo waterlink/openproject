@@ -28,22 +28,6 @@
 #++
 
 class Allowance
-  include Scope
-
-#  def self.projects(user: nil, permission: nil)
-#    scope = Project.active
-#
-#    scope = scope.merge(module_permission_active(permission))
-#
-#    return scope if user.present? && user.admin?
-#
-#    scope.merge(permission_in(user, nil, permission))
-#  end
-
-#  def self.users(project: nil, permission: nil, admin_pass: true)
-#    allowed(permission, project, admin_pass: admin_pass)
-#  end
-#
 #  def self.roles(user: nil, project: nil, permission: nil)
 #  end
 
