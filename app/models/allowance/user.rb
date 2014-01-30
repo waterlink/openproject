@@ -27,6 +27,8 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
+require 'allowance'
+
 Allowance.scope :users do
   table :users
   table :members

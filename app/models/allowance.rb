@@ -103,6 +103,3 @@ class Allowance
     class << self; self; end;
   end
 end
-
-require_relative 'allowance/user'
-require_relative 'allowance/project'
