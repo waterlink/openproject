@@ -177,6 +177,8 @@ class User < Principal
   }
   scope :admin, :conditions => { :admin => true }
 
+  include User::Allowed
+
   def sanitize_mail_notification_setting
     self.mail_notification = Setting.default_notification_option if self.mail_notification.blank?
     true
@@ -230,33 +232,6 @@ class User < Principal
   def self.search_in_project(query, options)
     Project.find(options.fetch(:project)).users.like(query)
   end
-
-  def self.register_allowance_evaluator(filter)
-    self.registered_allowance_evaluators ||= []
-
-    registered_allowance_evaluators << filter
-  end
-
-  # replace by class_attribute when on rails 3.x
-  class_eval do
-    def self.registered_allowance_evaluators() nil end
-    def self.registered_allowance_evaluators=(val)
-      singleton_class.class_eval do
-        define_method(:registered_allowance_evaluators) do
-          val
-        end
-      end
-    end
-  end
-
-  include User::Allowed
-
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::MembershipInProject
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::NonMember
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::Anonymous
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyMembership
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::AnyAnonymous
-  register_allowance_evaluator ChiliProject::PrincipalAllowanceEvaluator::Admin
 
   # Returns the user that matches provided login and password, or nil
   def self.try_to_login(login, password)

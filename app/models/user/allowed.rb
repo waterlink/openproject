@@ -197,12 +197,6 @@ module User::Allowed
   end
 
   module ClassMethods
-    def register_allowance_evaluator(filter)
-      self.registered_allowance_evaluators ||= []
-
-      registered_allowance_evaluators << filter
-    end
-
     def allowed(action = nil, context = nil, alias_prefix: "", admin_pass: true)
       Allowance.users(project: context, permission: action)
     end
