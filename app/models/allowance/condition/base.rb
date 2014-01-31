@@ -41,13 +41,25 @@ module Allowance::Condition
       unless ors.empty?
         ored_conditions = ors_to_arel(options)
 
-        condition = condition.or(ored_conditions) if ored_conditions
+        condition = if ored_conditions && condition
+                      condition.or(ored_conditions)
+                    elsif ored_conditions
+                      ored_conditions
+                    else
+                      condition
+                    end
       end
 
       unless ands.empty?
         anded_conditions = ands_to_arel(options)
 
-        condition = condition.and(anded_conditions) if anded_conditions
+        condition = if anded_conditions && condition
+                      condition.and(anded_conditions)
+                    elsif anded_conditions
+                      anded_conditions
+                    else
+                      condition
+                    end
       end
 
       condition
@@ -113,7 +125,7 @@ module Allowance::Condition
       ors[1..-1].each do |or_condition|
         arel_condition = or_condition.to_arel(options)
 
-        or_conditions = or_conditions.and(arel_condition) if arel_condition
+        or_conditions = or_conditions.or(arel_condition) if arel_condition
       end
 
       or_conditions

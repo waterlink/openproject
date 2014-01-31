@@ -51,8 +51,8 @@ module Allowance::Condition
                                 .or(anonymous_condition)
       end
 
-      action_condition = role_permitted(permission, admin_pass: admin_pass)
-      roles_join_condition = roles_join_condition.and(action_condition)
+#      action_condition = role_permitted(permission, admin_pass: admin_pass)
+      roles_join_condition #= roles_join_condition.and(action_condition)
     end
 
     private

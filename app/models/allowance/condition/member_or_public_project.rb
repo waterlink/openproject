@@ -48,9 +48,9 @@ module Allowance::Condition
       no_project_member = members[:project_id].eq(nil)
 
       role_is = if user.anonymous?
-                  roles[:id].eq(Role.anonymous.id)
+                  roles[:id].eq(::Role.anonymous.id)
                 else
-                  roles[:id].eq(Role.non_member.id)
+                  roles[:id].eq(::Role.non_member.id)
                 end
 
       members.grouping(no_project_member.and(role_is).and(Project.public.where_values))

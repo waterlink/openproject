@@ -33,12 +33,9 @@ module Allowance::Condition
     table User, :users
 
     def arel_statement(permission: nil, **extra)
-      return unless permission
-
-      action_condition = Role.permitted(permission).where_values
-      condition = roles.grouping(action_condition)
-
-      condition
+      Role.permitted(permission)
+          .where_values
+          .first
     end
   end
 end

@@ -46,14 +46,18 @@ Allowance.scope :users do
   condition :module_enabled, Allowance::Condition::ModuleEnabled
   condition :role_permitted, Allowance::Condition::RolePermitted
   condition :user_is_admin, Allowance::Condition::UserIsAdmin
+  condition :any_role, Allowance::Condition::AnyRole
+
+  any_role_or_admin = any_role.or(user_is_admin)
+  permitted_role_for_project = project_member_or_fallback.and(role_permitted)
 
   users.left_join(members)
        .on(users_memberships)
        .left_join(member_roles)
        .on(member_roles_id_equal)
        .left_join(roles)
-       .on(project_member_or_fallback)
-       .where(role_permitted.or(user_is_admin))
+       .on(permitted_role_for_project)
+       .where(any_role_or_admin)
 #               .left_join(projects)
 #               .on(members_projects_id_equal)
 #               .left_join(enabled_modules)

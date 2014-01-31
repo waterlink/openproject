@@ -128,6 +128,20 @@ describe User, 'allowed scope' do
 
   describe "w/ the context being a project
             w/o the project being public
+            w/ the user being member in the project
+            w/o asking for a certain permission" do
+
+    before do
+      member.save!
+    end
+
+    it "should return the user" do
+      expect(Allowance.users(project: project).all).to eq [user]
+    end
+  end
+
+  describe "w/ the context being a project
+            w/o the project being public
             w/o the user being member in the project
             w/ the user being member in a different project
             w/ the role having the permission" do
@@ -276,7 +290,7 @@ describe User, 'allowed scope' do
     end
 
     it "should return the user and anonymous" do
-      Allowance.users(permission: public_action, project: project).should =~ [user, anonymous]
+      Allowance.users(permission: public_action, project: project).should =~ [user]
     end
   end
 
@@ -292,7 +306,7 @@ describe User, 'allowed scope' do
     end
 
     it "should return the user and anonymous" do
-      Allowance.users(permission: [action, public_action], project: project).should =~ [user, anonymous]
+      Allowance.users(permission: [action, public_action], project: project).should =~ [user]
     end
   end
 

@@ -180,13 +180,12 @@ private
     if action.present?
       action_array = Array(action)
 
-      action_array.inject(Arel::Nodes::Equality.new(1, 0)) do |condition, action|
+      action_condition = action_array.inject(Arel::Nodes::Equality.new(1, 0)) do |condition, action|
         condition.or(neutral_or_action_match_condition(action))
       end
+
+      self.arel_table.grouping(action_condition)
     end
-   # else
-   #   #self.arel_table[:permissions].not_eq(nil)
-   # end
   end
 
   def self.neutral_or_action_match_condition(action)

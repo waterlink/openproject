@@ -49,7 +49,7 @@ module Api
           ids = ids.map(&:to_i).sort
           identifiers = identifiers.sort
 
-          options[:conditions] = ["id IN (?) OR identifier IN (?)", ids, identifiers]
+          options[:conditions] = ["projects.id IN (?) OR projects.identifier IN (?)", ids, identifiers]
         end
 
         @projects = @base.visible

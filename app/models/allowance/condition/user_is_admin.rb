@@ -29,7 +29,7 @@
 
 module Allowance::Condition
   class UserIsAdmin < Base
-    table User, :users
+    table User
 
     def arel_statement(admin_pass: true, **extra)
       if admin_pass
