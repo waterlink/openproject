@@ -28,38 +28,10 @@
 #++
 
 require 'allowance'
+require 'allowance/principals'
 
-Allowance.scope :users do
-  table :users
-  table :members
-  table :member_roles
-  table :roles
-  table :projects
-  table :enabled_modules
-
-  scope_target users
-
-  condition :users_memberships, Allowance::Condition::UsersMemberships
-  condition :member_roles_id_equal, Allowance::Condition::MemberRolesIdEqual
-  condition :project_member_or_fallback, Allowance::Condition::ProjectMemberOrFallback
-  condition :members_projects_id_equal, Allowance::Condition::MemberProjectsIdEqual
-  condition :module_enabled, Allowance::Condition::ModuleEnabled
-  condition :role_permitted, Allowance::Condition::RolePermitted
-  condition :user_is_admin, Allowance::Condition::UserIsAdmin
-  condition :any_role, Allowance::Condition::AnyRole
-
-  any_role_or_admin = any_role.or(user_is_admin)
-  permitted_role_for_project = project_member_or_fallback.and(role_permitted)
-
-  users.left_join(members)
-       .on(users_memberships)
-       .left_join(member_roles)
-       .on(member_roles_id_equal)
-       .left_join(roles)
-       .on(permitted_role_for_project)
-       .where(any_role_or_admin)
-#               .left_join(projects)
-#               .on(members_projects_id_equal)
-#               .left_join(enabled_modules)
-#               .on(module_enabled)
+class Allowance
+  def self.users(options = {})
+    self.principals(options).merge(User.unscoped)
+  end
 end

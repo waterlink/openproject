@@ -68,7 +68,8 @@ OpenProject::Application.configure do
   config.action_mailer.delivery_method = :letter_opener
 
   config.to_prepare do
-    require 'allowance/user'
+    require 'allowance/principals'
+    require 'allowance/users'
     require 'allowance/project'
   end
 end
