@@ -29,44 +29,29 @@
 
 module Allowance::Condition
   class ProjectMemberOrFallback < Base
-    table Member, :members_table
-    table MemberRole, :member_roles_table
-    table User, :users_table
-    table Role, :roles_table
+    table Member
+    table MemberRole
+    table User
+    table Role
 
     def arel_statement(project: nil, permission: nil, admin_pass: true, **extra)
-      member_in_project_condition = members_table.grouping(members_table[:project_id].not_eq(nil).and(member_roles_table[:role_id].eq(roles_table[:id])))
+      member_in_project_condition = members.grouping(members[:project_id].not_eq(nil).and(member_roles[:role_id].eq(roles[:id])))
 
       roles_join_condition = member_in_project_condition
 
       if project.nil? || project.is_public?
-        is_not_builtin_user_condition = users_table[:type].eq('User')
-        is_anonymous_user_condition = users_table[:id].eq(User.anonymous.id)
+        is_not_builtin_user_condition = users[:status].eq(::User::STATUSES[:active])
+        is_anonymous_user_condition = users[:id].eq(User.anonymous.id)
 
-        non_member_condition = members_table.grouping(members_table[:project_id].eq(nil).and(roles_table[:id].eq(Role.non_member.id)).and(is_not_builtin_user_condition))
-        anonymous_condition = members_table.grouping(members_table[:project_id].eq(nil).and(roles_table[:id].eq(Role.anonymous.id)).and(is_anonymous_user_condition))
+        non_member_condition = members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.non_member.id)).and(is_not_builtin_user_condition))
+        anonymous_condition = members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.anonymous.id)).and(is_anonymous_user_condition))
 
         roles_join_condition = roles_join_condition
                                 .or(non_member_condition)
                                 .or(anonymous_condition)
       end
 
-#      action_condition = role_permitted(permission, admin_pass: admin_pass)
-      roles_join_condition #= roles_join_condition.and(action_condition)
-    end
-
-    private
-
-    def role_permitted(permission, admin_pass: true)
-      action_condition = Role.permitted(permission).where_values
-      condition = roles_table.grouping(action_condition)
-
-      if admin_pass
-        admin_condition = users_table[:admin].eq(true)
-        condition = condition.or(admin_condition)
-      end
-
-      condition
+      roles_join_condition
     end
   end
 end
