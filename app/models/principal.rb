@@ -70,6 +70,8 @@ class Principal < ActiveRecord::Base
 
   scope :visible_by, lambda { |principal| Principal.visible_by_condition(principal) }
 
+  scope :order_by_name, -> { order(User::USER_FORMATS_STRUCTURE[Setting.user_format]) }
+
   before_create :set_default_empty_values
 
   def name(formatter = nil)

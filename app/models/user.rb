@@ -124,8 +124,6 @@ class User < Principal
   scope :blocked, lambda { create_blocked_scope(true) }
   scope :not_blocked, lambda { create_blocked_scope(false) }
 
-  scope :order_by_name, -> { order(User::USER_FORMATS_STRUCTURE[Setting.user_format]) }
-
   def self.create_blocked_scope(blocked)
     block_duration = Setting.brute_force_block_minutes.to_i.minutes
     blocked_if_login_since = Time.now - block_duration
