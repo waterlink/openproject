@@ -115,31 +115,16 @@ module User::Allowed
 
       return true if self.admin?
 
-      @permissions ||= Hash.new
-
-      permissions = if @permissions[project]
-        @permissions[project]
-      else
-        permissions = self.allowed_roles(nil, project)
-
-        @permissions[project] = permissions
+      permissions = allowance_cache.fetch(project) do
+        self.allowed_roles(nil, project)
       end
 
-      Array(action).any? { |action| @permissions[project].any? { |role| role.allowed_to?(action) } }
-    end
-
-    def allowed_in_projects(action)
-      @project_ids ||= Hash.new do |h, k|
-        h[k] = User.allowed(k).where(id: self.id).select("members.project_id")
-      end
-
-      @project_ids[action]
+      Array(action).any? { |action| permissions.any? { |role| role.allowed_to?(action) } }
     end
 
     def reload(options = nil)
-      # clear permission cache
-      # TODO: move this (and probably the whole cache) to a separet method/class
-      @permissions = Hash.new
+      allowance_cache.clear
+
       super
     end
 
@@ -147,58 +132,14 @@ module User::Allowed
       Role.find_by_sql(User.allowed(action, project).where(id: self.id).select("roles.*").to_sql)
     end
 
-    private
-
-    def cached_permissions(project)
-      @cached_permissions ||= Hash.new do |hash, context|
-        hash[context] = permissions_for_context(context)
-      end
-
-      @cached_permissions[project]
-    end
-
-    def permissions_for_context(project)
-      roles = Role.arel_table
-      members = Member.arel_table
-      member_roles = MemberRole.arel_table
-
-      joins = roles.join(member_roles, Arel::Nodes::OuterJoin)
-                   .on(member_roles[:role_id].eq(roles[:id]))
-                   .join(members, Arel::Nodes::OuterJoin)
-                   .on(member_roles[:member_id].eq(members[:id]))
-
-      membership_of_user = members[:user_id].eq(self.id)
-
-      condition = membership_of_user
-
-      if project
-        membership_in_project = members[:project_id].eq(project.id)
-
-        condition = condition.and membership_in_project
-
-        if project.is_public?
-          no_member = members[:id].eq(nil)
-          no_member_role = roles[:id].eq(Role.non_member.id)
-          non_member_condition = roles.grouping(no_member.and(no_member_role))
-
-          condition = condition.or non_member_condition
-        end
-      end
-
-
-      if anonymous?
-        condition = condition.or roles[:id].eq(Role.anonymous.id)
-      end
-
-      roles = Role.select(:permissions).joins(joins.join_sources).where(condition).all
-
-      roles.map(&:permissions).flatten.uniq
+    def allowance_cache
+      @allowance_cache ||= ::User::AllowedCache.new
     end
   end
 
   module ClassMethods
-    def allowed(action = nil, context = nil, alias_prefix: "", admin_pass: true)
-      Allowance.users(project: context, permission: action)
+    def allowed(action = nil, context = nil, admin_pass: true)
+      Allowance.users(project: context, permission: action, admin_pass: admin_pass)
     end
   end
 end

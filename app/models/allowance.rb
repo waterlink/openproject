@@ -41,6 +41,8 @@ class Allowance
     add_scope_method(name, allowance)
 
     @scopes << allowance
+
+    allowance
   end
 
   def table(name, definition = nil)
@@ -83,6 +85,14 @@ class Allowance
     else
       @tables.values
     end
+  end
+
+  def arel_table(klass)
+    self.send(tables(klass)).table
+  end
+
+  def has_table?(table_class)
+    tables(table_class).present?
   end
 
   private
