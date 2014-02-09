@@ -27,12 +27,26 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+require 'spec_helper'
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+describe Allowance do
+  let(:klass) { Allowance }
+  let(:instance) { klass.new }
+
+  describe :has_table? do
+    it 'should be true if the table is defined in the scope' do
+      test_scope = Allowance.scope :test do
+        table :users
+      end
+
+      test_scope.has_table?(User).should be_true
+    end
+
+    it 'should be false if the table is not defined in the scope' do
+      test_scope = Allowance.scope :test do
+      end
+
+      test_scope.has_table?(User).should be_false
     end
   end
 end

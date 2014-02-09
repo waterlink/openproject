@@ -28,11 +28,22 @@
 #++
 
 module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+  class PublicProject < Base
+    table Member, :members
+    table Role, :roles
+    table MemberRole, :member_roles
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+    def arel_statement(user: nil, **ignored)
+      no_project_member = members[:project_id].eq(nil)
+
+      role_is = if user.anonymous?
+                  roles[:id].eq(::Role.anonymous.id)
+                else
+                  roles[:id].eq(::Role.non_member.id)
+                end
+
+      members.grouping(no_project_member.and(role_is)
+                                        .and(Project.public.where_values))
     end
   end
 end

@@ -30,7 +30,6 @@
 module Allowance::Condition
   class RolePermitted < Base
     table Role, :roles
-    table User, :users
 
     def arel_statement(permission: nil, **extra)
       Role.permitted(permission)

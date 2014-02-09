@@ -31,7 +31,7 @@ module Allowance::Condition
   class UserIsAdmin < Base
     table User
 
-    def arel_statement(admin_pass: true, **extra)
+    def arel_statement(admin_pass: true, **ignored)
       if admin_pass
         users[:admin].eq(true)
       end

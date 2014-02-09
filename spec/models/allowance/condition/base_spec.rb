@@ -27,12 +27,27 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+require 'spec_helper'
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+describe Allowance::Condition::Base do
+  let(:scope) { double('scope') }
+  let(:klass) { Allowance::Condition::Base }
+  let(:instance) { klass.new(scope) }
+  let(:instance2) { klass.new(scope) }
+
+  describe :and do
+    it 'should return itself' do
+      instance.and(instance2).should == instance
     end
+  end
+
+  describe :or do
+    it 'should return itself' do
+      instance.or(instance2).should == instance
+    end
+  end
+
+  describe :to_arel do
+
   end
 end

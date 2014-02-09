@@ -27,31 +27,26 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectMemberOrFallback < Base
-    table Member
-    table MemberRole
-    table User
-    table Role
+require 'spec_helper'
 
-    def arel_statement(project: nil, permission: nil, admin_pass: true, **extra)
-      member_in_project_condition = members.grouping(members[:project_id].not_eq(nil).and(member_roles[:role_id].eq(roles[:id])))
+require_relative 'shared/allows_concatenation'
 
-      roles_join_condition = member_in_project_condition
+describe Allowance::Condition::AnyRole do
 
-      if project.nil? || project.is_public?
-        is_not_builtin_user_condition = users[:status].eq(::User::STATUSES[:active])
-        is_anonymous_user_condition = users[:id].eq(User.anonymous.id)
+  include Spec::Allowance::Condition::AllowsConcatenation
 
-        non_member_condition = members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.non_member.id)).and(is_not_builtin_user_condition))
-        anonymous_condition = members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.anonymous.id)).and(is_anonymous_user_condition))
+  nil_options false
 
-        roles_join_condition = roles_join_condition
-                                .or(non_member_condition)
-                                .or(anonymous_condition)
-      end
-
-      roles_join_condition
-    end
+  let(:scope) do
+    double('scope', :has_table? => true,
+                    :arel_table => roles_table)
   end
+  let(:klass) { Allowance::Condition::AnyRole }
+  let(:instance) { klass.new(scope) }
+  let(:roles_table) { Role.arel_table }
+  let(:non_nil_options) { {} }
+  let(:non_nil_arel) { roles_table[:id].not_eq(nil) }
+
+  it_should_behave_like "allows concatenation"
+  it_should_behave_like "requires models", Role
 end

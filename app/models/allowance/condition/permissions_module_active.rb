@@ -33,15 +33,11 @@ module Allowance::Condition
 
     # If the permission belongs to a project module,
     # make sure the module is enabled
-    def arel_statement(permission: nil, **extra)
-      return Arel::Nodes::Equality.new(1, 1) unless permission
-
+    def arel_statement(permission: nil, **ignored)
       perm = Redmine::AccessControl.permission(permission)
 
       if perm.present? && perm.project_module.present?
         enabled_modules[:name].eq(perm.project_module)
-      else
-        Arel::Nodes::Equality.new(1, 1)
       end
     end
   end

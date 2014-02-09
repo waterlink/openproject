@@ -259,8 +259,8 @@ describe User, 'allowed_to?' do
       member.save!
     end
 
-    it "should return the user and anonymous" do
-      User.allowed(public_action, project).should =~ [user, anonymous]
+    it "should return the user" do
+      User.allowed(public_action, project).should =~ [user]
     end
   end
 
@@ -275,8 +275,8 @@ describe User, 'allowed_to?' do
       member.save!
     end
 
-    it "should return the user and anonymous" do
-      User.allowed([action, public_action], project).should =~ [user, anonymous]
+    it "should return the user" do
+      User.allowed([action, public_action], project).should == [user]
     end
   end
 

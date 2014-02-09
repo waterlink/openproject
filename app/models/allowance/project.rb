@@ -30,7 +30,6 @@
 require 'allowance'
 
 Allowance.scope :projects do
-  table :users
   table :members
   table :member_roles
   table :roles
@@ -41,7 +40,8 @@ Allowance.scope :projects do
 
   condition :projects_members, Allowance::Condition::ProjectsMembers
   condition :member_roles_id_equal, Allowance::Condition::MemberRolesIdEqual
-  condition :member_or_public_project, Allowance::Condition::MemberOrPublicProject
+  condition :member_in_project, Allowance::Condition::MemberInProject
+  condition :public_project, Allowance::Condition::PublicProject
   condition :role_permitted, Allowance::Condition::RolePermitted
   condition :any_role, Allowance::Condition::AnyRole
   condition :project_active, Allowance::Condition::ProjectActive
@@ -49,6 +49,7 @@ Allowance.scope :projects do
   condition :permission_module_active, Allowance::Condition::PermissionsModuleActive
   condition :queried_user_is_admin, Allowance::Condition::QueriedUserIsAdmin
 
+  member_or_public_project = member_in_project.or(public_project)
   allowed_member_or_public_project = member_or_public_project.and(role_permitted)
   project_and_module_active = project_active.and(permission_module_active)
   has_role_or_admin = any_role.or(queried_user_is_admin)

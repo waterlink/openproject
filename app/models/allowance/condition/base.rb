@@ -38,29 +38,7 @@ module Allowance::Condition
 
       condition = arel_statement(options) if respond_to?(:arel_statement)
 
-      unless ors.empty?
-        ored_conditions = ors_to_arel(options)
-
-        condition = if ored_conditions && condition
-                      condition.or(ored_conditions)
-                    elsif ored_conditions
-                      ored_conditions
-                    else
-                      condition
-                    end
-      end
-
-      unless ands.empty?
-        anded_conditions = ands_to_arel(options)
-
-        condition = if anded_conditions && condition
-                      condition.and(anded_conditions)
-                    elsif anded_conditions
-                      anded_conditions
-                    else
-                      condition
-                    end
-      end
+      condition = concat(condition, options)
 
       condition
     end
@@ -77,19 +55,17 @@ module Allowance::Condition
       self
     end
 
+    protected
+
     def self.table(klass, name = nil)
       name ||= klass.table_name.to_sym
 
       add_required_table(klass)
 
       define_method name do
-        method_name = scope.tables(klass)
-
-        scope.send(method_name).table
+        scope.arel_table(klass)
       end
     end
-
-    protected
 
     def self.add_required_table(klass)
       @required_tables ||= []
@@ -107,28 +83,39 @@ module Allowance::Condition
 
     private
 
-    def ands_to_arel(options)
-      and_conditions = ands.first.to_arel(options)
+    def concat(condition, options)
+      condition = concat_ors(condition, options)
+      condition = concat_ands(condition, options)
 
-      ands[1..-1].each do |and_condition|
-        arel_condition = and_condition.to_arel(options)
-
-        and_conditions = and_conditions.and(arel_condition) if arel_condition
-      end
-
-      and_conditions
+      condition
     end
 
-    def ors_to_arel(options)
-      or_conditions = ors.first.to_arel(options)
+    def concat_ors(condition, options)
+      ored_conditions = ors.map { |ored| ored.to_arel(options) }
+                           .unshift(condition)
+                           .compact
 
-      ors[1..-1].each do |or_condition|
-        arel_condition = or_condition.to_arel(options)
+      concat_conditions(:or, ored_conditions)
+    end
 
-        or_conditions = or_conditions.or(arel_condition) if arel_condition
+    def concat_ands(condition, options)
+      anded_conditions = ands.map { |anded| anded.to_arel(options) }
+                             .unshift(condition)
+                             .compact
+
+      concat_conditions(:and, anded_conditions)
+    end
+
+    def concat_conditions(method, conditions)
+      return nil if conditions.empty?
+
+      concatenation = conditions.first
+
+      conditions[1..-1].each do |concat_condition|
+        concatenation = concatenation.send(method, concat_condition)
       end
 
-      or_conditions
+      concatenation
     end
 
     def ands
@@ -140,11 +127,9 @@ module Allowance::Condition
     end
 
     def check_for_valid_scope
-      all_tables_exist = required_tables.all? do |klass|
-        scope.tables(klass).present?
+      required_tables.each do |klass|
+        raise TableMissingInScopeError.new(self, klass) unless scope.has_table?(klass)
       end
-
-      raise "Not all required tables are defined in the current scope for #{self}" unless all_tables_exist
     end
 
     attr_reader :scope

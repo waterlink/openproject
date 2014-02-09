@@ -29,13 +29,9 @@
 
 module Allowance::Condition
   class QueriedUserIsAdmin < Base
-    table User, :users
-
-    def arel_statement(user: nil, admin_pass: true, **extra)
+    def arel_statement(user: nil, admin_pass: true, **ignored)
       if user && user.admin? && admin_pass
         Arel::Nodes::Equality.new(1, 1)
-      else
-        Arel::Nodes::Equality.new(1, 0)
       end
     end
   end

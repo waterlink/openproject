@@ -32,7 +32,7 @@ module Allowance::Condition
     table MemberRole
     table Member
 
-    def arel_statement(options = {})
+    def arel_statement(**ignored)
       member_roles[:member_id].eq(members[:id])
     end
   end

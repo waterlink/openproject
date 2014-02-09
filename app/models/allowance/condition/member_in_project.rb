@@ -28,11 +28,14 @@
 #++
 
 module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+  class MemberInProject < Base
+    table Member
+    table MemberRole
+    table Role
 
     def arel_statement(**ignored)
-      Project.active.where_values.first
+      join_condition = member_roles[:role_id].eq(roles[:id])
+      members.grouping(members[:project_id].not_eq(nil).and(join_condition))
     end
   end
 end

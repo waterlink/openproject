@@ -32,7 +32,7 @@ module Allowance::Condition
     table Project, :projects
     table Member, :members
 
-    def arel_statement(project: nil, user: nil, **extra)
+    def arel_statement(project: nil, user: nil, **ignored)
       condition = projects[:id].eq(members[:project_id])
 
       condition = condition.and(members[:user_id].eq(user.id)) if user.present?

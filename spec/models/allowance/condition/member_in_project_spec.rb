@@ -27,12 +27,45 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+require 'spec_helper'
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+require_relative 'shared/allows_concatenation'
+
+describe Allowance::Condition::MemberInProject do
+
+  include Spec::Allowance::Condition::AllowsConcatenation
+
+  nil_options false
+
+  let(:scope) do
+    scope = double('scope', :has_table? => true)
+
+    scope.instance_eval do
+      def arel_table(model)
+        if [Member, MemberRole, Role].include?(model)
+          model.arel_table
+        end
+      end
     end
+
+    scope
   end
+
+  let(:klass) { Allowance::Condition::MemberInProject }
+  let(:instance) { klass.new(scope) }
+  let(:member_roles_table) { MemberRole.arel_table }
+  let(:members_table) { Member.arel_table }
+  let(:roles_table) { Role.arel_table }
+  let(:non_nil_options) { {} }
+  let(:non_nil_arel) do
+    project_id_not_nil = members_table[:project_id].not_eq(nil)
+    member_roles_join_roles = member_roles_table[:role_id].eq(roles_table[:id])
+
+    condition = project_id_not_nil.and(member_roles_join_roles)
+
+    members_table.grouping(condition)
+  end
+
+  it_should_behave_like "allows concatenation"
+  it_should_behave_like "requires models", Member, MemberRole, Role
 end

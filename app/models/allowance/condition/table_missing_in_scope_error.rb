@@ -28,11 +28,17 @@
 #++
 
 module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+  class TableMissingInScopeError < ::Exception
+    attr_reader :model,
+                :condition
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+    def initialize(condition, model)
+      @model = model
+      @condition = condition
+    end
+
+    def message
+      "Conditon #{condition} is lacking the table for the #{model} model in it's scope"
     end
   end
 end

@@ -27,12 +27,40 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+require 'spec_helper'
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+require_relative 'shared/allows_concatenation'
+
+describe Allowance::Condition::RolePermitted do
+
+  include Spec::Allowance::Condition::AllowsConcatenation
+
+  let(:scope) do
+    scope = double('scope', :has_table? => true)
+
+    scope.instance_eval do
+      def arel_table(model)
+        if [Role].include?(model)
+          model.arel_table
+        end
+      end
     end
+
+    scope
   end
+  let(:klass) { Allowance::Condition::RolePermitted }
+  let(:instance) { klass.new(scope) }
+  let(:roles_table) { Role.arel_table }
+  let(:nil_options) { { permission: :a_permission } }
+  let(:non_nil_options) { { permission: :a_permission } }
+  let(:non_nil_arel) do
+    permission_matches = roles_table[:permissions].matches("%a_permission%")
+    or_neutral = Arel::Nodes::Equality.new(1, 0)
+
+    roles_table.grouping(or_neutral.or(permission_matches))
+  end
+
+  it_should_behave_like "allows concatenation"
+  it_should_behave_like "requires models", Role
 end
+

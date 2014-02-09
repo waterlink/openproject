@@ -42,15 +42,19 @@ Allowance.scope :principals do
 
   condition :users_memberships, Allowance::Condition::UsersMemberships
   condition :member_roles_id_equal, Allowance::Condition::MemberRolesIdEqual
-  condition :project_member_or_fallback, Allowance::Condition::ProjectMemberOrFallback
-  condition :members_projects_id_equal, Allowance::Condition::MemberProjectsIdEqual
-  condition :module_enabled, Allowance::Condition::ModuleEnabled
+  condition :member_in_project, Allowance::Condition::MemberInProject
+  condition :active_non_member_in_project, Allowance::Condition::ActiveNonMemberInProject
+  condition :anonymous_in_project, Allowance::Condition::AnonymousInProject
+ # condition :members_projects_id_equal, Allowance::Condition::MemberProjectsIdEqual
+ # condition :module_enabled, Allowance::Condition::ModuleEnabled
   condition :role_permitted, Allowance::Condition::RolePermitted
   condition :user_is_admin, Allowance::Condition::UserIsAdmin
   condition :any_role, Allowance::Condition::AnyRole
 
   any_role_or_admin = any_role.or(user_is_admin)
-  permitted_role_for_project = project_member_or_fallback.and(role_permitted)
+  member_or_fallback = member_in_project.or(active_non_member_in_project)
+                                        .or(anonymous_in_project)
+  permitted_role_for_project = member_or_fallback.and(role_permitted)
 
   principals.left_join(members)
             .on(users_memberships)

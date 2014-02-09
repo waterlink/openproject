@@ -27,12 +27,50 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-module Allowance::Condition
-  class ProjectActive < Base
-    table Project
+require 'spec_helper'
 
-    def arel_statement(**ignored)
-      Project.active.where_values.first
+require_relative 'shared/allows_concatenation'
+
+describe Allowance::Condition::UsersMemberships do
+
+  include Spec::Allowance::Condition::AllowsConcatenation
+
+  nil_options false
+
+  let(:scope) do
+    scope = double('scope', :has_table? => true)
+
+    scope.instance_eval do
+      def arel_table(model)
+        case model.to_s
+        when User.to_s
+          User.arel_table
+        when Member.to_s
+          Member.arel_table
+        end
+      end
+    end
+
+    scope
+  end
+
+  let(:klass) { Allowance::Condition::UsersMemberships }
+  let(:instance) { klass.new(scope) }
+  let(:users_table) { User.arel_table }
+  let(:members_table) { Member.arel_table }
+  let(:non_nil_options) { {} }
+  let(:non_nil_arel) { users_table[:id].eq(members_table[:user_id]) }
+
+  it_should_behave_like "allows concatenation"
+  it_should_behave_like "requires models", User, Member
+
+  describe :to_arel do
+    it 'limits the returned arel to the provided project if provided' do
+      project = double('project', id: 567)
+
+      expected = non_nil_arel.and(members_table[:project_id].eq(project.id)).to_sql
+
+      expect(instance.to_arel(project: project).to_sql).to eql(expected)
     end
   end
 end
