@@ -27,27 +27,14 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-require 'spec_helper'
+module Allowance::Condition
+  class LimitToProject < Base
+    table Project, :projects
 
-describe Allowance::Condition::Base do
-  let(:scope) { double('scope') }
-  let(:klass) { Allowance::Condition::Base }
-  let(:instance) { klass.new(scope) }
-  let(:instance2) { klass.new(scope) }
-
-  describe :and do
-    it 'should return itself' do
-      instance.and(instance2).should == instance
+    def arel_statement(project: nil, **ignored)
+      if project.present?
+        projects[:id].eq(project.id)
+      end
     end
-  end
-
-  describe :or do
-    it 'should return itself' do
-      instance.or(instance2).should == instance
-    end
-  end
-
-  describe :to_arel do
-
   end
 end

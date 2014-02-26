@@ -42,7 +42,7 @@ describe Allowance::Condition::PublicProject do
 
     scope.instance_eval do
       def arel_table(model)
-        if [Member, Role, MemberRole].include?(model)
+        if [Role, Project].include?(model)
           model.arel_table
         end
       end
@@ -63,7 +63,7 @@ describe Allowance::Condition::PublicProject do
   end
 
   it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Member, Role, MemberRole
+  it_should_behave_like "requires models", Role, Project
 
   describe :to_arel do
     it 'returns an arel to find non member if project is public and user not anonymous' do
@@ -74,8 +74,6 @@ describe Allowance::Condition::PublicProject do
   end
 
   def arel_condition(anonymous: true)
-    no_project_member = members_table[:project_id].eq(nil)
-
     id = anonymous ?
            Role.anonymous.id :
            Role.non_member.id
@@ -83,8 +81,8 @@ describe Allowance::Condition::PublicProject do
     anonymous_role = roles_table[:id].eq(id)
     public_project = projects_table[:is_public].eq(true)
 
-    condition = no_project_member.and(anonymous_role).and(public_project)
+    condition = anonymous_role.and(public_project)
 
-    members_table.grouping(condition)
+    projects_table.grouping(condition)
   end
 end

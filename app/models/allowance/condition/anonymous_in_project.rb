@@ -29,16 +29,14 @@
 
 module Allowance::Condition
   class AnonymousInProject < Base
-    table Member
     table User
     table Role
 
-    def arel_statement(project: nil, **ignored)
-      if project.nil? || project.is_public?
-        is_not_builtin_user_condition = users[:id].eq(User.anonymous.id)
+    def arel_statement(**ignored)
+      anonymous_user = users[:id].eq(User.anonymous.id)
+      anonymous_role = roles[:id].eq(Role.anonymous.id)
 
-        members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.anonymous.id)).and(is_not_builtin_user_condition))
-      end
+      users.grouping(anonymous_role.and(anonymous_user))
     end
   end
 end

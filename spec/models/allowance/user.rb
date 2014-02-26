@@ -136,7 +136,7 @@ describe User, 'allowed scope' do
     end
 
     it "should return the user" do
-      expect(Allowance.users(project: project).all).to eq [user]
+      expect(Allowance.users(project: project)).to eq [user]
     end
   end
 
@@ -217,7 +217,7 @@ describe User, 'allowed scope' do
     end
 
     it "should return the anonymous user" do
-      Allowance.users(permission: action, project: project).should == [anonymous]
+      expect(Allowance.users(permission: action, project: project)).to match_array([anonymous])
     end
   end
 
@@ -395,11 +395,11 @@ describe User, 'allowed scope' do
 
       non_member = Role.non_member
       non_member.permissions << action
-      non_member.save
+      non_member.save!
     end
 
-    it "should return the user and anonymous" do
-      Allowance.users(permission: action).should == [user]
+    it "should return the user" do
+      expect(Allowance.users(permission: action)).to match_array([user])
     end
   end
 
@@ -419,6 +419,144 @@ describe User, 'allowed scope' do
 
     it "should be anonymous" do
       Allowance.users(permission: action).should =~ [anonymous]
+    end
+  end
+
+  describe "w/ the context being a project
+            w/ the user being member in the project
+            w/ asking for a certain permission
+            w/ the permission belonging to a module
+            w/o the module being active" do
+    let(:permission) do
+      Redmine::AccessControl.permissions.find{ |p| p.project_module.present? }
+    end
+
+    before do
+      project.enabled_module_names = []
+
+      role.permissions << permission.name
+      member.save!
+    end
+
+    it "should be empty" do
+      expect(Allowance.users(project: project, permission: permission.name)).to eq []
+    end
+  end
+
+  describe "w/ the context being a project
+            w/ the user being member in the project
+            w/ asking for a certain permission
+            w/ the permission belonging to a module
+            w/ the module being active" do
+    let(:permission) do
+      Redmine::AccessControl.permissions.find{ |p| p.project_module.present? }
+    end
+
+    before do
+      project.enabled_module_names = [permission.project_module]
+
+      role.permissions << permission.name
+      member.save!
+    end
+
+    it "should return the user" do
+      expect(Allowance.users(project: project, permission: permission.name)).to eq [user]
+    end
+  end
+
+  describe "w/ the context being a project
+            w/ the user being member in the project
+            w/ asking for a certain permission
+            w/ the user having the permission in the project
+            w/o the project being active" do
+    before do
+      role.permissions << action
+      member.save!
+
+      project.update_attribute(:status, Project::STATUS_ARCHIVED)
+    end
+
+    it "should be empty" do
+      expect(Allowance.users(project: project, permission: action)).to eq []
+    end
+  end
+
+  describe "w/o the context being a project
+            w/ the user being member in a project
+            w/ asking for a certain permission
+            w/ the permission belonging to a module
+            w/o the module being active" do
+    let(:permission) do
+      Redmine::AccessControl.permissions.find{ |p| p.project_module.present? }
+    end
+
+    before do
+      project.enabled_module_names = []
+
+      role.permissions << permission.name
+      member.save!
+    end
+
+    it "should be empty" do
+      expect(Allowance.users(permission: permission.name)).to eq []
+    end
+  end
+
+  describe "w/o the context being a project
+            w/ the user being member in a project
+            w/ asking for a certain permission
+            w/ the permission belonging to a module
+            w/ the module being active" do
+    let(:permission) do
+      Redmine::AccessControl.permissions.find{ |p| p.project_module.present? }
+    end
+
+    before do
+      project.enabled_module_names = [permission.project_module]
+
+      role.permissions << permission.name
+      member.save!
+    end
+
+    it "should return the user" do
+      expect(Allowance.users(permission: permission.name)).to eq [user]
+    end
+  end
+
+  describe "w/o the context being a project
+            w/ asking for a certain permission
+            w/ the user having the permission in a project
+            w/o the project being active" do
+    before do
+      role.permissions << action
+      member.save!
+
+      project.update_attribute(:status, Project::STATUS_ARCHIVED)
+    end
+
+    it "should be empty" do
+      expect(Allowance.users(permission: action)).to eq []
+    end
+  end
+
+  describe "w/o the context being a project
+            w/ asking for a certain permission
+            w/ the user having the permission in a project
+            w/o the project being active
+            w/ the non_member being allowed the permission" do
+    before do
+      role.permissions << action
+      member.save!
+
+      non_member = Role.non_member
+      non_member.permissions << action
+      non_member.save!
+
+      project.update_attribute(:status, Project::STATUS_ARCHIVED)
+    end
+
+    it "should return the user" do
+      expect(Allowance.users(permission: action)).to eq [user]
     end
   end
 end

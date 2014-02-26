@@ -277,6 +277,7 @@ describe User, 'allowed_to?' do
         non_member.save!
 
         project.update_attribute(:is_public, true)
+        project2.update_attribute(:is_public, false)
       end
 
       it "should be false" do

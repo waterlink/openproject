@@ -119,7 +119,7 @@ module User::Allowed
         self.allowed_roles(nil, project)
       end
 
-      Array(action).any? { |action| permissions.any? { |role| role.allowed_to?(action) } }
+      Array(action).any? { |action| permissions.any? { |role| role.allowed_to?(action.to_sym) } }
     end
 
     def reload(options = nil)

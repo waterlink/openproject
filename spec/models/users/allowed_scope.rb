@@ -28,7 +28,7 @@
 
 require 'spec_helper'
 
-describe User, 'allowed_to?' do
+describe User, 'allowed scope' do
   let(:user) { member.principal }
   let(:anonymous) { FactoryGirl.build(:anonymous) }
   let(:project) { FactoryGirl.build(:project, is_public: false) }

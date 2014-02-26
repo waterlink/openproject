@@ -35,14 +35,14 @@ describe Allowance::Condition::ActiveNonMemberInProject do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  nil_options true
+  nil_options false
 
   let(:scope) do
     scope = double('scope', :has_table? => true)
 
     scope.instance_eval do
       def arel_table(model)
-        if [Member, Role, User].include?(model)
+        if [Role, User].include?(model)
           model.arel_table
         end
       end
@@ -56,20 +56,18 @@ describe Allowance::Condition::ActiveNonMemberInProject do
   let(:members_table) { Member.arel_table }
   let(:users_table) { User.arel_table }
   let(:roles_table) { Role.arel_table }
-  let(:nil_options) { { project: double('project', is_public?: false) } }
   let(:non_nil_options) { { project: double('project', is_public?: true) } }
   let(:non_nil_arel) do
     active_user = users_table[:status].eq(::User::STATUSES[:active])
-    project_id_nil = members_table[:project_id].eq(nil)
     non_member_role = roles_table[:id].eq(Role.non_member.id)
 
-    in_project_non_member = project_id_nil.and(non_member_role)
+    active_non_member = non_member_role.and(active_user)
 
-    members_table.grouping(in_project_non_member.and(active_user))
+    members_table.grouping(active_non_member)
   end
 
   it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Member, Role, User
+  it_should_behave_like "requires models", Role, User
 
   describe :to_arel do
     it 'returns an arel to find active non members if no project is provided' do

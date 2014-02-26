@@ -62,6 +62,10 @@ module Spec
                 def to_arel(options = nil)
                   ::Arel::Nodes::Equality.new(1, 1)
                 end
+
+                def required_tables
+                  []
+                end
               end.new
             end
 
@@ -70,18 +74,30 @@ module Spec
                 def to_arel(options = nil)
                   nil
                 end
+
+                def required_tables
+                  []
+                end
               end.new
             end
 
             describe :and do
-              it 'should return itself' do
-                instance.and(test_condition).should == instance
+              it 'should return a condition' do
+                expect(instance.and(test_condition)).to be_a(::Allowance::Condition::Base)
+              end
+
+              it 'should return a new instance' do
+                expect(instance.and(test_condition).object_id).to_not eq(instance.object_id)
               end
             end
 
             describe :or do
-              it 'should return itself' do
-                instance.or(test_condition).should == instance
+              it 'should return a condition' do
+                expect(instance.or(test_condition)).to be_a(::Allowance::Condition::Base)
+              end
+
+              it 'should return a new instance' do
+                expect(instance.or(test_condition).object_id).to_not eq(instance.object_id)
               end
             end
 
@@ -101,52 +117,52 @@ module Spec
               end
 
               it 'returns the ored conditions' do
-                instance.or(test_condition)
+                concatenated = instance.or(test_condition)
 
                 expected = (non_nil_arel.or(test_condition.to_arel)).to_sql
 
-                expect(instance.to_arel(non_nil_options).to_sql).to eq expected
+                expect(concatenated.to_arel(non_nil_options).to_sql).to eq expected
               end
 
               it 'returns the anded conditions' do
-                instance.and(test_condition)
+                concatenated = instance.and(test_condition)
 
                 expected = (non_nil_arel.and(test_condition.to_arel)).to_sql
 
-                expect(instance.to_arel(non_nil_options).to_sql).to eq expected
+                expect(concatenated.to_arel(non_nil_options).to_sql).to eq expected
               end
 
               it 'returns only the original condition if the anded condition is nil' do
-                instance.and(nil_test_condition)
+                concatenated = concatenated = instance.and(nil_test_condition)
 
                 expected = non_nil_arel.to_sql
 
-                expect(instance.to_arel(non_nil_options).to_sql).to eq expected
+                expect(concatenated.to_arel(non_nil_options).to_sql).to eq expected
               end
 
               it 'returns only the original condition if the ored condition is nil' do
-                instance.or(nil_test_condition)
+                concatenated = instance.or(nil_test_condition)
 
                 expected = non_nil_arel.to_sql
 
-                expect(instance.to_arel(non_nil_options).to_sql).to eq expected
+                expect(concatenated.to_arel(non_nil_options).to_sql).to eq expected
               end
 
               if has_nil_options?
                 it 'returns only the anded condition if the condition returns nil' do
-                  instance.and(test_condition)
+                  concatenated = instance.and(test_condition)
 
                   expected = (test_condition.to_arel).to_sql
 
-                  expect(instance.to_arel(nil_options).to_sql).to eq expected
+                  expect(concatenated.to_arel(nil_options).to_sql).to eq expected
                 end
 
                 it 'returns only the ored condition if the condition returns nil' do
-                  instance.or(test_condition)
+                  concatenated = instance.or(test_condition)
 
                   expected = (test_condition.to_arel).to_sql
 
-                  expect(instance.to_arel(nil_options).to_sql).to eq expected
+                  expect(concatenated.to_arel(nil_options).to_sql).to eq expected
                 end
               end
             end

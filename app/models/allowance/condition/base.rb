@@ -29,30 +29,34 @@
 
 module Allowance::Condition
   class Base
-    def initialize(scope)
+
+    include Allowance::Visitable
+
+    attr_accessor :if
+
+    def initialize(scope, only_if: nil)
       @scope = scope
+      @if = only_if
     end
 
     def to_arel(options = {})
       check_for_valid_scope
 
-      condition = arel_statement(options) if respond_to?(:arel_statement)
-
-      condition = concat(condition, options)
+      condition = arel_statement(options) if respond_to?(:arel_statement) && apply_condition?(options)
 
       condition
     end
 
     def and(other_condition)
-      ands << other_condition
-
-      self
+      AndConcatenation.new(scope, self, other_condition)
     end
 
     def or(other_condition)
-      ors << other_condition
+      OrConcatenation.new(scope, self, other_condition)
+    end
 
-      self
+    def required_tables
+      self.class.required_tables
     end
 
     protected
@@ -73,58 +77,15 @@ module Allowance::Condition
       @required_tables << klass
     end
 
-    def required_tables
-      self.class.required_tables
-    end
-
     def self.required_tables
       @required_tables ||= []
     end
 
+    def apply_condition?(options)
+      @if.nil? || @if.call(options)
+    end
+
     private
-
-    def concat(condition, options)
-      condition = concat_ors(condition, options)
-      condition = concat_ands(condition, options)
-
-      condition
-    end
-
-    def concat_ors(condition, options)
-      ored_conditions = ors.map { |ored| ored.to_arel(options) }
-                           .unshift(condition)
-                           .compact
-
-      concat_conditions(:or, ored_conditions)
-    end
-
-    def concat_ands(condition, options)
-      anded_conditions = ands.map { |anded| anded.to_arel(options) }
-                             .unshift(condition)
-                             .compact
-
-      concat_conditions(:and, anded_conditions)
-    end
-
-    def concat_conditions(method, conditions)
-      return nil if conditions.empty?
-
-      concatenation = conditions.first
-
-      conditions[1..-1].each do |concat_condition|
-        concatenation = concatenation.send(method, concat_condition)
-      end
-
-      concatenation
-    end
-
-    def ands
-      @ands ||= []
-    end
-
-    def ors
-      @ors ||= []
-    end
 
     def check_for_valid_scope
       required_tables.each do |klass|

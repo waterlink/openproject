@@ -32,17 +32,17 @@ class Allowance
 #  end
 
   def self.scope(name, &block)
-    @scopes ||= []
+    allowance = scope_instance(name)
 
-    allowance = Allowance.new
-
-    allowance.instance_eval(&block)
-
-    add_scope_method(name, allowance)
-
-    @scopes << allowance
+    allowance.instance_eval(&block) if block_given?
 
     allowance
+  end
+
+  # Removes the scope from the known scopes.
+  # Mostly used for testing for now.
+  def self.drop_scope(name)
+    drop_scope_instance(name)
   end
 
   def table(name, definition = nil)
@@ -60,12 +60,20 @@ class Allowance
     end
   end
 
-  def condition(name, definition)
-    instance_variable_set("@#{name}".to_sym, definition.new(self))
+  def condition(name, definition, options = {})
+    define_condition(name, definition, only_if: options[:if])
+  end
 
-    define_singleton_method name do
-      instance_variable_get("@#{name}".to_sym)
+  def alter_condition(name, new_condition)
+    if self.respond_to?(name)
+      orig_condition = self.send(name)
+      new_condition = instance_of_condition(new_condition)
+
+      visitor = Visitor::ConditionModifier.new(self, orig_condition, new_condition)
+      visitor.visit(@scope_target)
     end
+
+    define_condition(name, new_condition)
   end
 
   def scope_target(table)
@@ -74,7 +82,7 @@ class Allowance
 
   def scope(options = {})
     #TODO: check how to circumvent the uniq
-    @scope_target.scope(options).uniq
+    @scope_target.to_ar_scope(options).uniq
   end
 
   def tables(klass = nil)
@@ -87,6 +95,10 @@ class Allowance
     end
   end
 
+  def condition_name(instance)
+    @conditions[instance]
+  end
+
   def arel_table(klass)
     self.send(tables(klass)).table
   end
@@ -95,12 +107,66 @@ class Allowance
     tables(table_class).present?
   end
 
+  def print
+    visitor = Visitor::ToS.new(self)
+    visitor.visit(@scope_target)
+    #@scope_target.accept(visitor)
+  end
+
   private
+
+  def define_condition(name, definition, only_if: nil)
+    instance = instance_of_condition(definition, only_if: only_if)
+
+    instance_variable_set("@#{name}".to_sym, instance)
+    add_condition(name, instance)
+
+    define_singleton_method name do
+      instance_variable_get("@#{name}".to_sym)
+    end
+  end
+
+  def instance_of_condition(definition, only_if: nil)
+    if definition.is_a?(Class)
+      definition.new(self, only_if: only_if)
+    else
+      definition.if = only_if
+      definition
+    end
+  end
+
+  def self.scope_instance(name)
+    @scopes ||= {}
+
+    @scopes[name] ||= begin
+      allowance = Allowance.new
+
+      add_scope_method(name, allowance)
+
+      allowance
+    end
+
+    @scopes[name]
+  end
+
+  def self.drop_scope_instance(name)
+    return unless @scopes[name]
+
+    @scopes.delete(name)
+
+    eigenclass.send(:remove_method, name)
+  end
 
   def add_table(name, model)
     @tables ||= {}
 
     @tables[model] = name
+  end
+
+  def add_condition(name, instance)
+    @conditions ||= {}
+
+    @conditions[instance] = name
   end
 
   def self.add_scope_method(name, allowance)

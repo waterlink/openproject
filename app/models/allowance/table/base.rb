@@ -30,29 +30,46 @@
 module Allowance::Table
   class Base
 
-    Join = Struct.new(:table, :type, :condition)
+    include Allowance::Visitable
+    self.visitor_class = ::Allowance::Table::Base
 
     def initialize(scope)
       @scope = scope
     end
 
-    def left_join(other_table)
-      joins << Join.new(other_table, Arel::Nodes::OuterJoin)
+    def left_join(other_table, options = {})
+      join = Allowance::Join.new(other_table, Arel::Nodes::OuterJoin)
+
+      if options[:after] || options[:before]
+        reference_table = options[:after] || options[:before]
+
+        index = joins.index { |j| j.table == reference_table }
+        index = index + 1 if options[:after]
+
+        joins.insert(index, join)
+      else
+        joins << join
+      end
+
+      @current_join = join
 
       # return self for chainability
       self
     end
 
     def inner_join(other_table)
-      joins << Join.new(other_table, Arel::Nodes::InnerJoin)
+      joins << ::Allowance::Join.new(other_table, Arel::Nodes::InnerJoin)
+
+      @current_join = join
 
       # return self for chainability
       self
     end
 
     def on(condition)
+      @current_join.condition = condition
 
-      joins.last.condition = condition
+      @current_join = nil
 
       # return self for chainability
       self
@@ -65,7 +82,7 @@ module Allowance::Table
       self
     end
 
-    def scope(options = {})
+    def to_ar_scope(options = {})
       join_sources = joins_to_arel(options)
       where_sources = wheres_to_arel(options)
 
@@ -75,6 +92,18 @@ module Allowance::Table
 
     def table
       @table ||= self.class.arel_table
+    end
+
+    def joins
+      @joins ||= []
+    end
+
+    def model
+      self.class.model
+    end
+
+    def where_conditions
+      @where_conditions ||= []
     end
 
     protected
@@ -116,20 +145,8 @@ module Allowance::Table
       wheres
     end
 
-    def where_conditions
-      @where_conditions ||= []
-    end
-
-    def joins
-      @joins ||= []
-    end
-
     def inner_joins
       @inner_joins ||= []
-    end
-
-    def model
-      self.class.model
     end
   end
 end

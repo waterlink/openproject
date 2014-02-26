@@ -29,16 +29,14 @@
 
 module Allowance::Condition
   class ActiveNonMemberInProject < Base
-    table Member
     table User
     table Role
 
     def arel_statement(project: nil, **ignored)
-      if project.nil? || project.is_public?
-        is_not_builtin_user_condition = users[:status].eq(::User::STATUSES[:active])
+      active_user = users[:status].eq(::User::STATUSES[:active])
+      non_member_role = roles[:id].eq(Role.non_member.id)
 
-        members.grouping(members[:project_id].eq(nil).and(roles[:id].eq(Role.non_member.id)).and(is_not_builtin_user_condition))
-      end
+      users.grouping(non_member_role.and(active_user))
     end
   end
 end

@@ -42,7 +42,7 @@ describe Allowance::Condition::MemberInProject do
 
     scope.instance_eval do
       def arel_table(model)
-        if [Member, MemberRole, Role].include?(model)
+        if [MemberRole, Role].include?(model)
           model.arel_table
         end
       end
@@ -54,18 +54,12 @@ describe Allowance::Condition::MemberInProject do
   let(:klass) { Allowance::Condition::MemberInProject }
   let(:instance) { klass.new(scope) }
   let(:member_roles_table) { MemberRole.arel_table }
-  let(:members_table) { Member.arel_table }
   let(:roles_table) { Role.arel_table }
   let(:non_nil_options) { {} }
   let(:non_nil_arel) do
-    project_id_not_nil = members_table[:project_id].not_eq(nil)
-    member_roles_join_roles = member_roles_table[:role_id].eq(roles_table[:id])
-
-    condition = project_id_not_nil.and(member_roles_join_roles)
-
-    members_table.grouping(condition)
+    member_roles_table[:role_id].eq(roles_table[:id])
   end
 
   it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Member, MemberRole, Role
+  it_should_behave_like "requires models", MemberRole, Role
 end

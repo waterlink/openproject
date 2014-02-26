@@ -27,50 +27,10 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-require 'spec_helper'
-
-require_relative 'shared/allows_concatenation'
-
-describe Allowance::Condition::AnonymousInProject do
-
-  include Spec::Allowance::Condition::AllowsConcatenation
-
-  nil_options false
-
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [Role, User].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
-  let(:klass) { Allowance::Condition::AnonymousInProject }
-  let(:instance) { klass.new(scope) }
-  let(:users_table) { User.arel_table }
-  let(:roles_table) { Role.arel_table }
-  let(:non_nil_options) { { project: double('project', is_public?: true) } }
-  let(:non_nil_arel) do
-    anonymous_user = users_table[:id].eq(User.anonymous.id)
-    anonymous_role = roles_table[:id].eq(Role.anonymous.id)
-
-    anonymous = anonymous_role.and(anonymous_user)
-
-    users_table.grouping(anonymous)
-  end
-
-  it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Role, User
-
-  describe :to_arel do
-    it 'returns an arel to find anonymous (non member) if no project is provided' do
-      expect(instance.to_arel.to_sql).to eq(non_nil_arel.to_sql)
+module Allowance::Condition
+  class True < Base
+    def arel_statement(**ignored)
+      Arel::Nodes::Equality.new(1, 1)
     end
   end
 end

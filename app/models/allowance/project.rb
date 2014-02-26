@@ -41,6 +41,7 @@ Allowance.scope :projects do
   condition :projects_members, Allowance::Condition::ProjectsMembers
   condition :member_roles_id_equal, Allowance::Condition::MemberRolesIdEqual
   condition :member_in_project, Allowance::Condition::MemberInProject
+  condition :no_member, Allowance::Condition::NoMember
   condition :public_project, Allowance::Condition::PublicProject
   condition :role_permitted, Allowance::Condition::RolePermitted
   condition :any_role, Allowance::Condition::AnyRole
@@ -49,10 +50,12 @@ Allowance.scope :projects do
   condition :permission_module_active, Allowance::Condition::PermissionsModuleActive
   condition :queried_user_is_admin, Allowance::Condition::QueriedUserIsAdmin
 
-  member_or_public_project = member_in_project.or(public_project)
-  allowed_member_or_public_project = member_or_public_project.and(role_permitted)
-  project_and_module_active = project_active.and(permission_module_active)
-  has_role_or_admin = any_role.or(queried_user_is_admin)
+  condition :no_membership_in_public_project, no_member.and(public_project)
+  condition :member_or_public_project, member_in_project.or(no_membership_in_public_project)
+  condition :allowed_member_or_public_project, member_or_public_project.and(role_permitted)
+  condition :project_and_module_active, project_active.and(permission_module_active)
+  condition :has_role_or_admin, any_role.or(queried_user_is_admin)
+  condition :allowed_user_and_permission_active, has_role_or_admin.and(project_and_module_active)
 
   projects.left_join(members)
           .on(projects_members)
@@ -62,5 +65,5 @@ Allowance.scope :projects do
           .on(allowed_member_or_public_project)
           .left_join(enabled_modules)
           .on(enabled_modules_of_project)
-          .where(has_role_or_admin.and(project_and_module_active))
+          .where(allowed_user_and_permission_active)
 end

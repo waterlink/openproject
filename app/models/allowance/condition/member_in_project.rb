@@ -29,13 +29,11 @@
 
 module Allowance::Condition
   class MemberInProject < Base
-    table Member
     table MemberRole
     table Role
 
     def arel_statement(**ignored)
-      join_condition = member_roles[:role_id].eq(roles[:id])
-      members.grouping(members[:project_id].not_eq(nil).and(join_condition))
+      member_roles[:role_id].eq(roles[:id])
     end
   end
 end
