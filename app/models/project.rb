@@ -900,6 +900,7 @@ class Project < ActiveRecord::Base
 
   def members_with_assignable_roles
     Allowance.principals(project: self)
-             .where(roles: { assignable: true }).order_by_name
+             .where(roles: { assignable: true })
+             .order_by_name.where(members: { project_id: self.id })
   end
 end

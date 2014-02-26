@@ -57,7 +57,7 @@ module Queries::WorkPackages::AvailableFilterOptions
 
   def get_principals
     if project
-      project.principals.sort
+      project.principals.merge(User.order_by_name)
     elsif visible_projects.any?
       # members of visible projects
       principals = Principal.active.where(["#{User.table_name}.id IN (SELECT DISTINCT user_id FROM members WHERE project_id IN (?))", visible_projects.collect(&:id)]).sort
