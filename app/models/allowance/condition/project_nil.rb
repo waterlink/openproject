@@ -28,11 +28,11 @@
 #++
 
 module Allowance::Condition
-  class ProjectInactive < Base
-    table Project
+  class ProjectNil < Base
+    table Project, :projects
 
     def arel_statement(**ignored)
-      projects[:status].eq(Project::STATUS_ARCHIVED)
+      projects[:id].eq(nil)
     end
   end
 end

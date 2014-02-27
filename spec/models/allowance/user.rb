@@ -305,7 +305,7 @@ describe User, 'allowed scope' do
       member.save!
     end
 
-    it "should return the user and anonymous" do
+    it "should return the user" do
       Allowance.users(permission: [action, public_action], project: project).should =~ [user]
     end
   end
