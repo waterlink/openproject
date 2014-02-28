@@ -91,14 +91,11 @@ module Redmine
         def possible_watcher_users
           permission = self.class.acts_as_watchable_options[:permission]
 
-          # TODO: check for the login field which might also be used
-          # to order_by_name and must hence be included in the select.
-          # might also want to somehow extract those values programatically from user USER_FORMATS_STRUCTURE
           # TODO: somehow get this standard #distinct method to work
 
           selected_fields = (['users.id', 'users.type'] + User::USER_FORMATS_STRUCTURE.values.flatten.uniq.map(&:to_s)).join(', ')
 
-          User.allowed(permission, self.project, admin_pass: false).order_by_name.select(selected_fields)
+          User.allowed(permission, self.project, admin_pass: false).not_builtin.order_by_name.select(selected_fields)
         end
 
         # Returns an array of users that are proposed as watchers

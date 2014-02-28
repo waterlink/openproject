@@ -32,6 +32,6 @@ require 'allowance/principals'
 
 class Allowance
   def self.users(options = {})
-    self.principals(options).merge(User.unscoped)
+    User.unscoped.merge(self.principals(options))
   end
 end
