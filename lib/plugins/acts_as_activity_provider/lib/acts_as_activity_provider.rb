@@ -104,7 +104,6 @@ module Redmine
           private
 
           def find_events_for_class(provider, activity, provider_options, user, from, to, options)
-            projects_table = Arel::Table.new(:projects)
             journals_table = Arel::Table.new(:journals)
             activity_journals_table = provider.activity_journals_table activity
 
@@ -131,7 +130,8 @@ module Redmine
                                     query: query,
                                     user: user)
 
-            query = query.order(journals_table[:id]).take(options[:limit]) if options[:limit]
+            query = query.order(journals_table[:id])
+            query = query.take(options[:limit]) if options[:limit]
 
             projection = Redmine::Acts::ActivityProvider.event_projection(journals_table)
             projection << provider.event_query_projection(activity) if provider.respond_to?(:event_query_projection)

@@ -45,7 +45,10 @@ describe Activity::WorkPackageActivityProvider do
 
   describe '#event_type' do
     describe 'latest event' do
-      let(:subject) { Activity::WorkPackageActivityProvider.find_events(event_scope, user, Date.today, Date.tomorrow, {}).last.try :event_type }
+      let(:subject) do
+        events = Activity::WorkPackageActivityProvider.find_events(event_scope, user, Date.today, Date.tomorrow, {})
+        events.last.try :event_type
+      end
 
       context 'when a work package has been created' do
         before { work_package.save! }
