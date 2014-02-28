@@ -28,9 +28,6 @@
 #++
 
 class Allowance
-#  def self.roles(user: nil, project: nil, permission: nil)
-#  end
-
   def self.scope(name, &block)
     allowance = scope_instance(name)
 
@@ -110,7 +107,6 @@ class Allowance
   def print
     visitor = Visitor::ToS.new(self)
     visitor.visit(@scope_target)
-    #@scope_target.accept(visitor)
   end
 
   private
@@ -136,23 +132,23 @@ class Allowance
   end
 
   def self.scope_instance(name)
-    @scopes ||= {}
+    scopes[name]
+  end
 
-    @scopes[name] ||= begin
+  def self.scopes
+    @scopes ||= Hash.new do |hash, scope_name|
       allowance = Allowance.new
 
-      add_scope_method(name, allowance)
+      add_scope_method(scope_name, allowance)
 
-      allowance
+      hash[scope_name] = allowance
     end
-
-    @scopes[name]
   end
 
   def self.drop_scope_instance(name)
-    return unless @scopes[name]
+    return unless scopes[name]
 
-    @scopes.delete(name)
+    scopes.delete(name)
 
     eigenclass.send(:remove_method, name)
   end

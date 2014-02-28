@@ -6,10 +6,6 @@ class Allowance
       base.visitor_class = base
     end
 
-    def accept(visitor)
-      visitor.visit(self)
-    end
-
     def visitor_class
       self.class.visitor_class
     end

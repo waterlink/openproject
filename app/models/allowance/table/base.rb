@@ -144,9 +144,5 @@ module Allowance::Table
 
       wheres
     end
-
-    def inner_joins
-      @inner_joins ||= []
-    end
   end
 end
