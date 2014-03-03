@@ -51,9 +51,9 @@ class Attachment < ActiveRecord::Base
                         { :controller => '/attachments', :action => 'download', :id => o.id, :filename => o.filename }
                       end)
 
-  cattr_accessor :storage_path
-
-  self.storage_path = OpenProject::Configuration['attachments_storage_path'] || Rails.root.join('files').to_s
+  cattr_writer :storage_path
+  self.storage_path = OpenProject::Configuration['attachments_storage_path'] ||
+                      Rails.root.join('files').to_s
 
   def filesize_below_allowed_maximum
     if self.filesize > Setting.attachment_max_size.to_i.kilobytes
@@ -164,6 +164,10 @@ class Attachment < ActiveRecord::Base
   # Returns true if the file is readable
   def readable?
     File.readable?(diskfile)
+  end
+
+  def self.storage_path
+    @@storage_path.is_a?(Proc) ? @@storage_path.call : @@storage_path
   end
 
   # Bulk attaches a set of files to an object
