@@ -35,7 +35,7 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= render :partial => 'news/form', :locals => { :f => f } %>
   <%= submit_tag l(:button_create) %>
   <%= link_to l(:label_preview),
-              project_news_preview_path(@project, @news),
+              preview_project_news_path(@project, @news),
               :class => 'preview',
               :id => 'news-form-preview' %>
 <% end %>

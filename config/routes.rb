@@ -206,10 +206,10 @@ OpenProject::Application.routes.draw do
     # this could probably be rewritten with a resource :as => 'roadmap'
     match '/roadmap' => 'versions#index', :via => :get
 
-    resources :news, :only => [:index, :new, :create] do
-      collection do
-        resource :preview, :controller => "news/previews", :only => [:create], :as => "news_preview"
-      end
+    resources :news, :only => [:index, :new, :create]
+
+    resource :news, :only => [:new] do
+      put :preview, to: 'news/previews#preview', on: :collection
     end
 
     namespace :time_entries do
@@ -418,7 +418,9 @@ OpenProject::Application.routes.draw do
   resources :news, :only => [:index, :destroy, :update, :edit, :show] do
     resources :comments, :controller => 'news/comments', :only => [:create, :destroy], :shallow => true
 
-    resource :preview, :controller => 'news/previews', :only => [:create]
+    member do
+        put :preview, to: 'news/previews#preview'
+    end
   end
 
 
