@@ -99,7 +99,7 @@ module Allowance::Table
     end
 
     def model
-      self.class.model
+      table.engine
     end
 
     def where_conditions
@@ -116,9 +116,9 @@ module Allowance::Table
       @table.arel_table
     end
 
-    def self.model
-      @table
-    end
+#    def self.model
+#      @table
+#    end
 
     private
 

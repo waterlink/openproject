@@ -37,20 +37,7 @@ describe Allowance::Condition::PermissionsModuleActive do
 
   nil_options true
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [EnabledModule].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::PermissionsModuleActive }
   let(:instance) { klass.new(scope) }
   let(:enabled_module_table) { EnabledModule.arel_table }

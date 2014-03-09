@@ -37,23 +37,7 @@ describe Allowance::Condition::UsersMemberships do
 
   nil_options false
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        case model.to_s
-        when User.to_s
-          User.arel_table
-        when Member.to_s
-          Member.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::UsersMemberships }
   let(:instance) { klass.new(scope) }
   let(:users_table) { User.arel_table }

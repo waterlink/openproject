@@ -61,13 +61,13 @@ module Allowance::Condition
 
     protected
 
-    def self.table(klass, name = nil)
-      name ||= klass.table_name.to_sym
+    def self.table(model, name = nil)
+      name ||= model.table_name.to_sym
 
-      add_required_table(klass)
+      add_required_table(model)
 
       define_method name do
-        scope.arel_table(klass)
+        model.arel_table
       end
     end
 
@@ -88,8 +88,8 @@ module Allowance::Condition
     private
 
     def check_for_valid_scope
-      required_tables.each do |klass|
-        raise TableMissingInScopeError.new(self, klass) unless scope.has_table?(klass)
+      required_tables.each do |table|
+        raise TableMissingInScopeError.new(self, table) unless scope.has_table?(table)
       end
     end
 

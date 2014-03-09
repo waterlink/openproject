@@ -43,18 +43,7 @@ class Allowance
   end
 
   def table(name, definition = nil)
-    table_class = definition || Class.new(Allowance::Table::Base) do
-      table name.to_s.singularize.camelize.constantize
-    end
-
-    new_table = table_class.new(self)
-
-    instance_variable_set("@#{name}".to_sym, new_table)
-    add_table name, table_class.model
-
-    define_singleton_method name do
-      instance_variable_get("@#{name}".to_sym)
-    end
+    define_table(name, definition)
   end
 
   def condition(name, definition, options = {})
@@ -62,13 +51,7 @@ class Allowance
   end
 
   def alter_condition(name, new_condition)
-    if self.respond_to?(name)
-      orig_condition = self.send(name)
-      new_condition = instance_of_condition(new_condition)
-
-      visitor = Visitor::ConditionModifier.new(self, orig_condition, new_condition)
-      visitor.visit(@scope_target)
-    end
+    replace_condition_with(name, new_condition) if self.respond_to?(name)
 
     define_condition(name, new_condition)
   end
@@ -82,27 +65,11 @@ class Allowance
     @scope_target.to_ar_scope(options).uniq
   end
 
-  def tables(klass = nil)
-    @tables ||= {}
-
-    if klass
-      @tables[klass]
-    else
-      @tables.values
-    end
-  end
-
   def condition_name(instance)
     @conditions[instance]
   end
 
-  def arel_table(klass)
-    self.send(tables(klass)).table
-  end
-
-  def has_table?(table_class)
-    tables(table_class).present?
-  end
+  delegate :has_table?, to: :tables
 
   def print
     visitor = Visitor::ToS.new(self)
@@ -110,26 +77,6 @@ class Allowance
   end
 
   private
-
-  def define_condition(name, definition, only_if: nil)
-    instance = instance_of_condition(definition, only_if: only_if)
-
-    instance_variable_set("@#{name}".to_sym, instance)
-    add_condition(name, instance)
-
-    define_singleton_method name do
-      instance_variable_get("@#{name}".to_sym)
-    end
-  end
-
-  def instance_of_condition(definition, only_if: nil)
-    if definition.is_a?(Class)
-      definition.new(self, only_if: only_if)
-    else
-      definition.if = only_if
-      definition
-    end
-  end
 
   def self.scope_instance(name)
     scopes[name]
@@ -153,16 +100,36 @@ class Allowance
     eigenclass.send(:remove_method, name)
   end
 
-  def add_table(name, model)
-    @tables ||= {}
+  def define_table(name, definition = nil)
+    new_table = tables.define(name, definition)
 
-    @tables[model] = name
+    define_singleton_method name do
+      new_table
+    end
   end
 
-  def add_condition(name, instance)
-    @conditions ||= {}
+  def tables
+    @tables ||= Table::Map.new(self)
+  end
 
-    @conditions[instance] = name
+  def define_condition(name, definition, only_if: nil)
+    instance = conditions.define(name, definition, only_if: only_if)
+
+    define_singleton_method name do
+      instance
+    end
+  end
+
+  def replace_condition_with(name, new_condition)
+    orig_condition = self.send(name)
+    new_condition = conditions.define(name, new_condition)
+
+    visitor = Visitor::ConditionModifier.new(self, orig_condition, new_condition)
+    visitor.visit(@scope_target)
+  end
+
+  def conditions
+    @conditions ||= Condition::Map.new(self)
   end
 
   def self.add_scope_method(name, allowance)

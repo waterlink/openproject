@@ -27,38 +27,39 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-require 'spec_helper'
+module Allowance::Condition
+  class Map
+    def initialize(scope)
+      self.scope = scope
+    end
 
-require_relative 'shared/allows_concatenation'
+    def define(name, definition, only_if: nil)
+      instance = instance_of(definition, only_if: only_if)
 
-describe Allowance::Condition::ActiveNonMemberInProject do
+      add name, instance
 
-  include Spec::Allowance::Condition::AllowsConcatenation
+      instance
+    end
 
-  nil_options false
+    private
 
-  let(:scope) { double('scope', :has_table? => true) }
-  let(:klass) { Allowance::Condition::ActiveNonMemberInProject }
-  let(:instance) { klass.new(scope) }
-  let(:members_table) { Member.arel_table }
-  let(:users_table) { User.arel_table }
-  let(:roles_table) { Role.arel_table }
-  let(:non_nil_options) { { project: double('project', is_public?: true) } }
-  let(:non_nil_arel) do
-    active_user = users_table[:status].eq(::User::STATUSES[:active])
-    non_member_role = roles_table[:id].eq(Role.non_member.id)
+    attr_accessor :scope
 
-    active_non_member = non_member_role.and(active_user)
+    def add(name, condition)
+      map[condition] = name
+    end
 
-    members_table.grouping(active_non_member)
-  end
+    def instance_of(definition, only_if: nil)
+      if definition.is_a?(Class)
+        definition.new(scope, only_if: only_if)
+      else
+        definition.if = only_if
+        definition
+      end
+    end
 
-  it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Role, User
-
-  describe :to_arel do
-    it 'returns an arel to find active non members if no project is provided' do
-      expect(instance.to_arel.to_sql).to eq(non_nil_arel.to_sql)
+    def map
+      @map ||= {}
     end
   end
 end

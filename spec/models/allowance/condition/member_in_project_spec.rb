@@ -37,20 +37,7 @@ describe Allowance::Condition::MemberInProject do
 
   nil_options false
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [MemberRole, Role].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::MemberInProject }
   let(:instance) { klass.new(scope) }
   let(:member_roles_table) { MemberRole.arel_table }

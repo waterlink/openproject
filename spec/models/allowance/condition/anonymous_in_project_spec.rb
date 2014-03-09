@@ -37,20 +37,7 @@ describe Allowance::Condition::AnonymousInProject do
 
   nil_options false
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [Role, User].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::AnonymousInProject }
   let(:instance) { klass.new(scope) }
   let(:users_table) { User.arel_table }

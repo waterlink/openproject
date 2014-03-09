@@ -37,20 +37,7 @@ describe Allowance::Condition::EnabledModulesOfProject do
 
   nil_options false
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [Project, EnabledModule].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
-
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::EnabledModulesOfProject }
   let(:instance) { klass.new(scope) }
   let(:projects_table) { Project.arel_table }
