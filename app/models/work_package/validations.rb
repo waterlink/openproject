@@ -106,14 +106,18 @@ module WorkPackage::Validations
   end
   
   def validate_assigned_to_is_member
-    unless self.project.members.map(&:user_id).include?(self.assigned_to.id)
-      errors.add(:assigned_to, l(:error_must_be_project_member))
+    if self.assigned_to.present?
+      unless self.project.principals.map(&:id).include?(self.assigned_to.id)
+        errors.add(:assigned_to, l(:error_must_be_project_member))
+      end
     end
   end
   
   def validate_responsible_is_member
-    unless self.project.members.map(&:user_id).include?(self.responsible.id)
-      errors.add(:responsible, l(:error_must_be_project_member))
+    unless self.responsible.nil?
+      unless self.project.principals.map(&:id).include?(self.responsible.id)
+        errors.add(:responsible, l(:error_must_be_project_member))
+      end
     end
   end
 
