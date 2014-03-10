@@ -37,7 +37,6 @@ Feature: Showing Projects
     And there is a role "CanViewCal"
     And the role "CanViewCal" may have the following rights:
       | view_calendar      |
-      | view_project       |
       | view_work_packages |
     And there is 1 user with the following:
       | login | bob |
