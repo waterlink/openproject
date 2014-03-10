@@ -35,7 +35,6 @@ describe Allowance::Condition::QueriedUserIsAdmin do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  nil_options true
 
   let(:scope) { double('scope') }
   let(:klass) { Allowance::Condition::QueriedUserIsAdmin }

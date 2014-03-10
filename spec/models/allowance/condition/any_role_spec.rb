@@ -35,12 +35,7 @@ describe Allowance::Condition::AnyRole do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  nil_options false
-
-  let(:scope) do
-    double('scope', :has_table? => true,
-                    :arel_table => roles_table)
-  end
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::AnyRole }
   let(:instance) { klass.new(scope) }
   let(:roles_table) { Role.arel_table }

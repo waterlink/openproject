@@ -36,12 +36,8 @@ module Spec
         end
 
         module ClassMethods
-          def nil_options(is = true)
-            @nil_options = is
-          end
-
           def has_nil_options?
-            @nil_options
+            self.new.respond_to?(:nil_options)
           end
 
           shared_examples "requires models" do |*models|
@@ -107,11 +103,7 @@ module Spec
               end
 
               if has_nil_options?
-                it 'returns an arel statement if nothing is passed' do
-                  expect(instance.to_arel.to_sql).to eq non_nil_arel.to_sql
-                end
-
-                it 'returns nil if admin_pass is false' do
+                it 'returns nil if for some options' do
                   expect(instance.to_arel(nil_options)).to be_nil
                 end
               end

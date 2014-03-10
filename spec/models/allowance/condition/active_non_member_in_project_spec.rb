@@ -35,7 +35,6 @@ describe Allowance::Condition::ActiveNonMemberInProject do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  nil_options false
 
   let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::ActiveNonMemberInProject }

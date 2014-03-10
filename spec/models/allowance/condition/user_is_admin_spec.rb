@@ -35,10 +35,7 @@ describe Allowance::Condition::UserIsAdmin do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  let(:scope) do
-    double('scope', :has_table? => true,
-                    :arel_table => users_table)
-  end
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::UserIsAdmin }
   let(:instance) { klass.new(scope) }
   let(:users_table) { User.arel_table }

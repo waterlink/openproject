@@ -35,23 +35,10 @@ describe Allowance::Condition::RolePermitted do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  let(:scope) do
-    scope = double('scope', :has_table? => true)
-
-    scope.instance_eval do
-      def arel_table(model)
-        if [Role].include?(model)
-          model.arel_table
-        end
-      end
-    end
-
-    scope
-  end
+  let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::RolePermitted }
   let(:instance) { klass.new(scope) }
   let(:roles_table) { Role.arel_table }
-  let(:nil_options) { { permission: :a_permission } }
   let(:non_nil_options) { { permission: :a_permission } }
   let(:non_nil_arel) do
     permission_matches = roles_table[:permissions].matches("%a_permission%")

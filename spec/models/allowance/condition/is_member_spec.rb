@@ -31,19 +31,18 @@ require 'spec_helper'
 
 require_relative 'shared/allows_concatenation'
 
-describe Allowance::Condition::MemberRolesIdEqual do
+describe Allowance::Condition::IsMember do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
 
   let(:scope) { double('scope', :has_table? => true) }
-  let(:klass) { Allowance::Condition::MemberRolesIdEqual }
+  let(:klass) { Allowance::Condition::IsMember }
   let(:instance) { klass.new(scope) }
-  let(:member_roles_table) { MemberRole.arel_table }
   let(:members_table) { Member.arel_table }
   let(:non_nil_options) { {} }
-  let(:non_nil_arel) { member_roles_table[:member_id].eq(members_table[:id]) }
+  let(:non_nil_arel) { members_table[:id].not_eq(nil) }
 
   it_should_behave_like "allows concatenation"
-  it_should_behave_like "requires models", Member, MemberRole
+  it_should_behave_like "requires models", Member
 end

@@ -35,28 +35,37 @@ describe Allowance::Condition::PublicProject do
 
   include Spec::Allowance::Condition::AllowsConcatenation
 
-  nil_options true
-
   let(:scope) { double('scope', :has_table? => true) }
   let(:klass) { Allowance::Condition::PublicProject }
   let(:instance) { klass.new(scope) }
   let(:members_table) { Member.arel_table }
   let(:roles_table) { Role.arel_table }
   let(:projects_table) { Project.arel_table }
-  let(:nil_options) { { user: nil } }
-  let(:non_nil_options) { { user: double('user', anonymous?: true) } }
+  let(:non_nil_options) { { } }
   let(:non_nil_arel) do
-    arel_condition(anonymous: true)
+    projects_table[:is_public].eq(true)
   end
 
   it_should_behave_like "allows concatenation"
   it_should_behave_like "requires models", Role, Project
 
   describe :to_arel do
-    it 'returns an arel to find non member if project is public and user not anonymous' do
+    it 'returns an arel to find non member in public project if user is not the anonymous user' do
       condition = arel_condition(anonymous: false)
 
       expect(instance.to_arel(user: double('user', anonymous?: false)).to_sql).to eq(condition.to_sql)
+    end
+
+    it 'returns an arel to find anonymous in public project if user is anonymous user' do
+      condition = arel_condition(anonymous: true)
+
+      expect(instance.to_arel(user: double('user', anonymous?: true)).to_sql).to eq(condition.to_sql)
+    end
+
+    it 'returns an arel to public_projects if user nil' do
+      condition = non_nil_arel
+
+      expect(instance.to_arel(user: nil).to_sql).to eq(condition.to_sql)
     end
   end
 
