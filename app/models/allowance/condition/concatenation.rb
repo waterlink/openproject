@@ -5,15 +5,15 @@ module Allowance::Condition
                   :second
 
     def initialize(scope, first, second)
-      @first = first
-      @second = second
+      self.first = first
+      self.second = second
 
       super(scope)
     end
 
     def arel_statement(options)
       if apply_condition?(options)
-        concat([@first, @second], options)
+        concat([first, second], options)
       else
         nil
       end
