@@ -208,8 +208,8 @@ OpenProject::Application.routes.draw do
 
     resources :news, :only => [:index, :new, :create]
 
-    resource :news, :only => [:new] do
-      put :preview, to: 'news/previews#preview', on: :collection
+    resource :news, only: [:new] do
+      put :preview, on: :collection
     end
 
     namespace :time_entries do
@@ -419,7 +419,7 @@ OpenProject::Application.routes.draw do
     resources :comments, :controller => 'news/comments', :only => [:create, :destroy], :shallow => true
 
     member do
-        put :preview, to: 'news/previews#preview'
+        put :preview
     end
   end
 
