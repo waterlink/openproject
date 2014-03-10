@@ -29,15 +29,14 @@ module Allowance::Condition
     end
 
     def concat_conditions(method, conditions)
-      return nil if conditions.empty?
-
-      concatenation = conditions.first
-
-      conditions[1..-1].each do |concat_condition|
-        concatenation = concatenation.send(method, concat_condition)
+      case conditions.size
+      when 0
+        nil
+      when 1
+        conditions.first
+      when 2
+        conditions.first.send(method, conditions.second)
       end
-
-      concatenation
     end
 
     def self.concatenation_method(method = nil)
