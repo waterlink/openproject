@@ -314,10 +314,6 @@ class RoutingTest < ActionDispatch::IntegrationTest
                                                     :action => 'create',
                                                     :project_id => '567' )
 
-      should route(:post, "/projects/567/news/preview").to( :controller => 'news/previews',
-                                                            :action => 'create',
-                                                            :project_id => '567')
-
     end
 
     should route(:get, "/news").to( :controller => 'news',
@@ -369,14 +365,6 @@ class RoutingTest < ActionDispatch::IntegrationTest
     should route(:delete, "/comments/15").to( :controller => 'news/comments',
                                               :action => 'destroy',
                                               :id => '15' )
-  end
-
-  context "news/previews" do
-    context "news scoped" do
-      should route(:post, "/news/567/preview").to( :controller => 'news/previews',
-                                                   :action => 'create',
-                                                   :news_id => '567' )
-    end
   end
 
   context "project_enumerations" do
