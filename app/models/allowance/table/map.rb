@@ -49,6 +49,10 @@ module Allowance::Table
       for_model(model).present?
     end
 
+    def name(table)
+      map[table]
+    end
+
     private
 
     attr_accessor :scope

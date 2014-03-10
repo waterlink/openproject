@@ -13,7 +13,7 @@ module Allowance::Visitor
     end
 
     def visit_Allowance_Table_Base(subject)
-      ret = get_table_name(subject.model)
+      ret = get_table_name(subject)
 
       subject.joins.each do |join|
         ret += visit(join)
@@ -31,7 +31,7 @@ module Allowance::Visitor
                "\nINNER JOIN "
              end
 
-      ret += get_table_name(join.table.model)
+      ret += get_table_name(join.table)
 
       ret += "\nON " + visit(join.condition)
 
@@ -45,8 +45,6 @@ module Allowance::Visitor
     def visit_Allowance_Condition_AndConcatenation(condition)
       first = visit(condition.first)
       second = visit(condition.second)
-      #first = get_condition_name(condition.first)
-      #second = get_condition_name(condition.second)
 
       "#{first} AND #{second}"
     end
@@ -54,8 +52,6 @@ module Allowance::Visitor
     def visit_Allowance_Condition_OrConcatenation(condition)
       first = visit(condition.first)
       second = visit(condition.second)
-      #first = get_condition_name(condition.first)
-      #second = get_condition_name(condition.second)
 
       "#{first} OR #{second}"
     end
@@ -80,8 +76,8 @@ module Allowance::Visitor
       condition.class.to_s
     end
 
-    def get_table_name(model)
-      scope.tables(model).to_s
+    def get_table_name(table)
+      scope.table_name(table).to_s
     end
 
     def method_name(subject)

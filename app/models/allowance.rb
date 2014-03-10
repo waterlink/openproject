@@ -61,15 +61,11 @@ class Allowance
   end
 
   def scope(options = {})
-    #TODO: check how to circumvent the uniq
     @scope_target.to_ar_scope(options).uniq
   end
 
-  def condition_name(instance)
-    @conditions[instance]
-  end
-
   delegate :has_table?, to: :tables
+  delegate :name, to: :tables, prefix: 'table'
 
   def print
     visitor = Visitor::ToS.new(self)
