@@ -32,33 +32,28 @@ require 'spec_helper'
 describe Allowance, '#alter_condition' do
   let(:klass) { Allowance }
   let(:instance) { klass.new }
-  def test_scope_name
-    :test_scope
-  end
 
   def clean_print(allowance)
     # we are not interested in the whitespaces
     allowance.print.gsub(/\n\s*/, " ")
   end
 
-  let(:scope_name) { test_scope_name }
+  let(:scope_name) { :test_scope }
 
   after(:each) do
-    name = test_scope_name
-
     # Cleanup created scope so it does not interfere with
     # other tests
-    Allowance.drop_scope(name) if Allowance.respond_to?(name)
+    Allowance.drop_scope(scope_name) if Allowance.respond_to?(scope_name)
   end
 
   describe :alter_condition do
     let(:table1) {
-      mock_table = double('first_model', :arel_table => double('arel_table', :name => 'first_name'))
+      mock_table = double('first_model')
 
       Class.new(Allowance::Table::Base) { table mock_table }
     }
     let(:table2) {
-      mock_table = double('second_model', :arel_table => double('arel_table', :name => 'second_name'))
+      mock_table = double('second_model')
 
       Class.new(Allowance::Table::Base) { table mock_table }
     }

@@ -32,18 +32,13 @@ require 'spec_helper'
 describe Allowance do
   let(:klass) { Allowance }
   let(:instance) { klass.new }
-  def test_scope_name
-    :test_scope
-  end
 
-  let(:scope_name) { test_scope_name }
+  let(:scope_name) { :test_scope }
 
   after(:each) do
-    name = test_scope_name
-
     # Cleanup created scope so it does not interfere with
     # other tests
-    Allowance.drop_scope(name) if Allowance.respond_to?(name)
+    Allowance.drop_scope(scope_name) if Allowance.respond_to?(scope_name)
   end
 
   describe :scope do
@@ -83,6 +78,16 @@ describe Allowance do
       end
 
       expect(instance1.object_id).to eq instance2.object_id
+    end
+  end
+
+  describe :drop_scope do
+    it 'removes the defined scope' do
+      Allowance.scope(scope_name) {}
+
+      Allowance.drop_scope(scope_name)
+
+      expect(Allowance.respond_to?(scope_name)).to be_false
     end
   end
 
