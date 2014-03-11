@@ -211,25 +211,13 @@ class QueryTest < ActiveSupport::TestCase
   end
 
   def test_filter_assigned_to_me
-    with_settings :work_package_group_assignment => '1' do
-      Setting.work_package_group_assignment = '1'
-      role = FactoryGirl.create(:role, permissions: [:view_work_packages])
-      
-      group = FactoryGirl.create :group
-      group_user_is_not_member_of = FactoryGirl.create :group
-      user = FactoryGirl.create :user
+    with_settings(:work_package_group_assignment => '1', :work_package_group_assignment => '1') do
       project = FactoryGirl.create :project
-      member1 = FactoryGirl.build :member
-      member2 = FactoryGirl.build :member
-      roles = FactoryGirl.create_list :role, 2
-      role_ids = roles.map { |r| r.id }
-      project.add_member!(user,role) 
+      group = FactoryGirl.create(:group, :member_in_project => project)
+      group_user_is_not_member_of = FactoryGirl.create(:group, :member_in_project => project)
+      user = FactoryGirl.create(:user, :member_in_project => project)
       group.users << user
       group.save!
-      member1.force_attributes = { :principal => group, :role_ids => role_ids, :project => project }
-      member1.save!
-      member2.force_attributes = { :principal => group_user_is_not_member_of, :role_ids => role_ids, :project => project }
-      member2.save!
 
       User.current = user
       

@@ -38,41 +38,30 @@ describe WorkPackage do
   end
 
   describe '- Relations ' do
+    let(:project) { FactoryGirl.create(:project_with_types) }
+    let(:type) { project.types.first }
+    let(:user) { FactoryGirl.create(:user, :member_in_project => project) }
+    let(:work_package) { FactoryGirl.create(:work_package,
+					                          :project => project,
+					                          :type_id => type.id,
+                                              :responsible_id => user.id) }
     describe '#project' do
       it 'can read the project w/ the help of the belongs_to association' do
-        project          = FactoryGirl.create(:project)
-        planning_element = FactoryGirl.create(:work_package,
-                                              :project_id => project.id)
+        work_package.reload
 
-        planning_element.reload
-
-        planning_element.project.should == project
+        work_package.project.should == project
       end
 
       it 'can read the responsible w/ the help of the belongs_to association' do
-        user             = FactoryGirl.create(:user)
-        role             = FactoryGirl.create(:role)
-        member           = FactoryGirl.build(:member, :user => user, :project => project)
-        member.role_ids  = [role.id]
-        member.save!
-        planning_element = FactoryGirl.create(:work_package,
-					      :project => project,
-                                              :responsible_id => user.id)
+        work_package.reload
 
-        planning_element.reload
-
-        planning_element.responsible.should == user
+        work_package.responsible.should == user
       end
 
       it 'can read the type w/ the help of the belongs_to association' do
-        type             = project.types.first
-        planning_element = FactoryGirl.create(:work_package,
-                                                   :type_id => type.id,
-                                                   :project => project)
+        work_package.reload
 
-        planning_element.reload
-
-        planning_element.type.should == type
+        work_package.type.should == type
       end
 
       it 'can read the planning_element_status w/ the help of the belongs_to association' do
@@ -243,11 +232,7 @@ describe WorkPackage do
   end
 
   describe 'journal' do
-    let(:responsible) { FactoryGirl.create(:user) }
-    let(:role) { FactoryGirl.create(:role) }
-
-    let(:member) { FactoryGirl.build(:member, :user => responsible, :project => project) }
-
+    let(:responsible) { FactoryGirl.create(:user, :member_in_project => project) }
     let(:type)        { project.types.first } # The type-validation, that now lives on work-package is more
                                               # strict than the previous validation on the planning-element
                                               # it also checks, that the type is available for the project the pe lives in.
@@ -264,11 +249,6 @@ describe WorkPackage do
                                   :type_id                         => type.id,
                                   :status_id                       => pe_status.id
                                   ) }
-
-    before do
-      member.role_ids = [role.id]
-      member.save!
-    end
 
     it "has an initial journal, so that it's creation shows up in activity" do
       pe.journals.size.should == 1
