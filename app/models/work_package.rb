@@ -68,7 +68,12 @@ class WorkPackage < ActiveRecord::Base
   # <<< issues.rb <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   scope :recently_updated, :order => "#{WorkPackage.table_name}.updated_at DESC"
-  scope :visible, ->(*args) { joins(:project).merge(Project.allowed(args.first || User.current, :view_work_packages)) }
+
+  def self.visible(*args)
+    allowed_projects_scope = Project.allowed(args.first || User.current, :view_work_packages)
+
+    joins(:project).merge(allowed_projects_scope)
+  end
 
   scope :in_status, lambda {|*args| where(:status_id => (args.first.respond_to?(:id) ? args.first.id : args.first))}
 
