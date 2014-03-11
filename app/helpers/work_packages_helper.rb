@@ -507,17 +507,15 @@ module WorkPackagesHelper
   end
 
   def work_package_form_assignee_attribute(form, work_package, locals = {})
-    options = work_package.assignable_assignees.select_only_name_attributes.map {|m| [m.name, m.id]}
+    candidate_scope = work_package.assignable_assignees
 
-    WorkPackageAttribute.new(:assignee,
-                             form.select(:assigned_to_id, options, :include_blank => true))
+    work_package_form_user_attributes(form, candidate_scope, :assigned_to)
   end
 
   def work_package_form_responsible_attribute(form, work_package, locals = {})
-    options = work_package.assignable_responsibles.select_only_name_attributes.map {|m| [m.name, m.id]}
+    candidate_scope = work_package.assignable_responsibles
 
-    WorkPackageAttribute.new(:responsible,
-                             form.select(:responsible_id, options, :include_blank => true))
+    work_package_form_user_attributes(form, candidate_scope, :responsible)
   end
 
   def work_package_form_category_attribute(form, work_package, locals = {})
@@ -646,5 +644,12 @@ module WorkPackagesHelper
        work_package_show_spent_time_attribute(work_package),
        work_package_show_fixed_version_attribute(work_package)
      ]
+  end
+
+  def work_package_form_user_attributes(form, candidate_scope, field)
+    options = candidate_scope.select_only_name_attributes.map { |m| [m.name, m.id] }
+
+    WorkPackageAttribute.new(field,
+                             form.select(:"#{field.to_s}_id", options, :include_blank => true))
   end
 end
