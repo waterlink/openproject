@@ -116,10 +116,6 @@ module Allowance::Table
       @table.arel_table
     end
 
-#    def self.model
-#      @table
-#    end
-
     private
 
     def joins_to_arel(options)
