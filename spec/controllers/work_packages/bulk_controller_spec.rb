@@ -240,7 +240,8 @@ describe WorkPackages::BulkController do
         put :update,
             ids: work_package_ids,
             notes: 'Bulk editing',
-            work_package: { priority_id: priority.id,
+            work_package: { project: project_1,
+                            priority_id: priority.id,
                             assigned_to_id: group_id,
                             responsible_id: responsible_id,
                             custom_field_values: { custom_field_1.id.to_s => '' },
@@ -338,7 +339,7 @@ describe WorkPackages::BulkController do
 
       describe :properties do
         describe :groups do
-          let(:group) { FactoryGirl.create(:group) }
+          let(:group) { FactoryGirl.create(:group, :member_in_project => project_1) }
           let(:group_id) { group.id }
 
           include_context :update_request
