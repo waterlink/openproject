@@ -51,7 +51,12 @@ describe WorkPackage do
 
       it 'can read the responsible w/ the help of the belongs_to association' do
         user             = FactoryGirl.create(:user)
+        role             = FactoryGirl.create(:role)
+        member           = FactoryGirl.build(:member, :user => user, :project => project)
+        member.role_ids  = [role.id]
+        member.save!
         planning_element = FactoryGirl.create(:work_package,
+					      :project => project,
                                               :responsible_id => user.id)
 
         planning_element.reload
@@ -239,6 +244,10 @@ describe WorkPackage do
 
   describe 'journal' do
     let(:responsible) { FactoryGirl.create(:user) }
+    let(:role) { FactoryGirl.create(:role) }
+
+    let(:member) { FactoryGirl.build(:member, :user => responsible, :project => project) }
+
     let(:type)        { project.types.first } # The type-validation, that now lives on work-package is more
                                               # strict than the previous validation on the planning-element
                                               # it also checks, that the type is available for the project the pe lives in.
@@ -255,6 +264,11 @@ describe WorkPackage do
                                   :type_id                         => type.id,
                                   :status_id                       => pe_status.id
                                   ) }
+
+    before do
+      member.role_ids = [role.id]
+      member.save!
+    end
 
     it "has an initial journal, so that it's creation shows up in activity" do
       pe.journals.size.should == 1
