@@ -34,8 +34,8 @@ See doc/COPYRIGHT.rdoc for more details.
    principals_available = @project.possible_members("", 1)
    member_per_page = 20
 
-   @members = @project.member_principals.includes(:roles, :principal, :member_roles)
-                                        .order(User::USER_FORMATS_STRUCTURE[Setting.user_format].map{|attr| attr.to_s}.join(", "))
+   @members = @project.member_principals.joins(:roles, :principal, :member_roles)
+                                        .merge(Principal.order_by_name)
                                         .page(params[:page])
                                         .per_page(per_page_param)
 %>

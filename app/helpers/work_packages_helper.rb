@@ -507,18 +507,14 @@ module WorkPackagesHelper
   end
 
   def work_package_form_assignee_attribute(form, work_package, locals = {})
-    selected_fields = (['users.id', 'users.type'] + User::USER_FORMATS_STRUCTURE.values.flatten.uniq.map(&:to_s)).join(', ')
-
-    options = work_package.assignable_assignees.select(selected_fields).map {|m| [m.name, m.id]}
+    options = work_package.assignable_assignees.select_only_name_attributes.map {|m| [m.name, m.id]}
 
     WorkPackageAttribute.new(:assignee,
                              form.select(:assigned_to_id, options, :include_blank => true))
   end
 
   def work_package_form_responsible_attribute(form, work_package, locals = {})
-    selected_fields = (['users.id', 'users.type'] + User::USER_FORMATS_STRUCTURE.values.flatten.uniq.map(&:to_s)).join(', ')
-
-    options = work_package.assignable_responsibles.select(selected_fields).map {|m| [m.name, m.id]}
+    options = work_package.assignable_responsibles.select_only_name_attributes.map {|m| [m.name, m.id]}
 
     WorkPackageAttribute.new(:responsible,
                              form.select(:responsible_id, options, :include_blank => true))
