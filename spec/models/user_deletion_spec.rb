@@ -48,6 +48,7 @@ describe User, 'deletion' do
 
   let(:substitute_user) { DeletedUser.first }
 
+
   before do
     # for some reason there seem to be users in the db
     User.delete_all
@@ -126,8 +127,13 @@ describe User, 'deletion' do
   end
 
   shared_examples_for "created journalized associated object" do
+    let(:member) { FactoryGirl.build(:member, :user => user, :project => project) }
+    let(:role) { FactoryGirl.create(:role) }
     before do
       User.stub(:current).and_return user # in order to have the content journal created by the user
+      member.role_ids = [role]
+      member.save!
+
       associations.each do |association|
         associated_instance.send(association.to_s + "=", user)
       end
@@ -197,9 +203,13 @@ describe User, 'deletion' do
                                                                  :status => status) }
     let(:associated_class) { WorkPackage }
     let(:associations) { [:author, :assigned_to, :responsible] }
+    let(:member) { FactoryGirl.build(:member, :user => user2, :project => project) }
+    let(:role) { FactoryGirl.create(:role) }
 
     before do
       User.stub(:current).and_return user2
+      member.role_ids = [role]
+      member.save!
       associated_instance.author = user2
       associated_instance.assigned_to = user2
       associated_instance.responsible = user2
@@ -291,6 +301,14 @@ describe User, 'deletion' do
                                                            :activity => FactoryGirl.create(:time_entry_activity)) }
     let(:associated_class) { TimeEntry }
     let(:associations) { [:user] }
+    let(:member) { FactoryGirl.build(:member, :user => user, :project => project) }
+    let(:role1) { FactoryGirl.create(:role) }
+
+    before do
+      member.role_ids = [role1]
+      member.save!
+    end
+
 
     it_should_behave_like "created journalized associated object"
   end
