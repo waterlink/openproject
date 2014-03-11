@@ -48,7 +48,6 @@ describe User, 'deletion' do
 
   let(:substitute_user) { DeletedUser.first }
 
-
   before do
     # for some reason there seem to be users in the db
     User.delete_all
@@ -129,7 +128,6 @@ describe User, 'deletion' do
   shared_examples_for "created journalized associated object" do
     before do
       User.stub(:current).and_return user # in order to have the content journal created by the user
-
       associations.each do |association|
         associated_instance.send(association.to_s + "=", user)
       end
@@ -293,7 +291,6 @@ describe User, 'deletion' do
                                                            :activity => FactoryGirl.create(:time_entry_activity)) }
     let(:associated_class) { TimeEntry }
     let(:associations) { [:user] }
-
 
     it_should_behave_like "created journalized associated object"
   end
