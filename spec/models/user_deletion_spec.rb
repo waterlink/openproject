@@ -321,7 +321,7 @@ describe User, 'deletion' do
   describe "WHEN the user is a member of a project" do
     before do
       member #saving
-      user.destroy
+      member.user.destroy
     end
 
     it { Member.find_by_id(member.id).should be_nil }
