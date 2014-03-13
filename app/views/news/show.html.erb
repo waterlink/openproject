@@ -54,7 +54,8 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= link_to l(:label_preview),
               preview_news_path(@news),
               :class => 'preview',
-              :id => 'news-form-preview' %>
+              :id => 'news-form-preview',
+              :accesskey => accesskey(:edit) %>
 <% end %>
 <div id="preview" class="wiki"></div>
 </div>

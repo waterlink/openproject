@@ -29,6 +29,17 @@ See doc/COPYRIGHT.rdoc for more details.
 
 # Changelog
 
+* `#2393` Fix: No warning when leaving site without saving
+* `#3267` Fix: Link in Breadcrumbs links to global work packages
+* `#3395` Fix: After error message values are gone during creation of message
+* `#4097` Fix accesskeys
+* `#4118` Fix: Add missing labels
+* `#5057` Fix: Whitelisted more params for planning elements controller
+* Allowed sending of mails with only cc: or bcc: fields
+* Allow adding attachments to created work packages via planning elements controller
+* Remove unused rmagick dependency
+* Fix: Work package short URI
+
 ## 3.0.0pre51
 
 * `#3701` Fix: Filter custom fields of work packages in timeline reports
