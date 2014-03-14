@@ -71,13 +71,14 @@ See doc/COPYRIGHT.rdoc for more details.
 
   <p>
     <%= submit_tag l(:button_save) %>
-    <%= link_to_remote l(:label_preview),
-                        { :url => wiki_preview_path(:project_id => @project),
-                          :method => :post,
-                          :update => 'preview',
-                          :with => "Form.serialize('wiki_form')",
-                          :complete => "Element.scrollTo('preview')"
-                        }, :accesskey => accesskey(:preview) %>
+    <%= link_to l(:label_preview),
+                  preview_path(@project,
+                               preview: { param: :content,
+                                          values: :text,
+                                          class: WikiContent }),
+                  :class => 'preview',
+                  :id => 'wiki_form',
+                  :accesskey => accesskey(:edit) %>
   </p>
 
   <%= wikitoolbar_for 'content_text' %>

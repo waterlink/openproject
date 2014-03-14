@@ -148,7 +148,6 @@ OpenProject::Application.routes.draw do
 
   get   'projects/:project_id/wiki/new' => 'wiki#new', :as => 'wiki_new'
   post  'projects/:project_id/wiki/new' => 'wiki#create', :as => 'wiki_create'
-  post  'projects/:project_id/wiki/preview' => 'wiki#preview', :as => 'wiki_preview'
   get   'projects/:project_id/wiki/:id/new' => 'wiki#new_child', :as => 'wiki_new_child'
   get   'projects/:project_id/wiki/:id/toc' => 'wiki#index', :as => 'wiki_page_toc'
   post  'projects/:id/wiki' => 'wikis#edit'
@@ -230,7 +229,6 @@ OpenProject::Application.routes.draw do
         get :parent_page, :action => 'edit_parent_page'
         put :parent_page, :action => 'update_parent_page'
         get :history
-        post :preview
         post :protect
         post :add_attachment
         get  :list_attachments

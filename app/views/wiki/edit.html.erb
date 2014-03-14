@@ -38,16 +38,17 @@ See doc/COPYRIGHT.rdoc for more details.
                    :'data-wp_autocomplete_url' => work_packages_auto_complete_path(:project_id => @project, :format => :json) %></p>
 <p><label><%= Version.human_attribute_name(:comments) %></label><br /><%= f.text_field :comments, :size => 120 %></p>
 <p><label><%=l(:label_attachment_plural)%></label><br /><%= render :partial => 'attachments/form' %></p>
-
 <p><%= submit_tag l(:button_save) %>
-   <%= link_to_remote l(:label_preview),
-                       { :url => { :controller => '/wiki', :action => 'preview', :project_id => @project, :id => @page },
-                         :method => :post,
-                         :update => 'preview',
-                         :before => 'var form_data = Form.serialize("wiki_form", true); form_data._method="post";',
-                         :with => "$H(form_data).toQueryString()",
-                         :complete => "Element.scrollTo('preview')"
-                       }, :accesskey => accesskey(:preview) %></p>
+  <%= link_to l(:label_preview),
+                preview_path(@page,
+                             preview: { param: :content,
+                                        values: :text,
+                                        class: WikiContent,
+                                        project_id: @project.id }),
+                :class => 'preview',
+                :id => 'wiki_form',
+                :accesskey => accesskey(:edit) %>
+</p>
 <%= wikitoolbar_for 'content_text' %>
 <% end %>
 
