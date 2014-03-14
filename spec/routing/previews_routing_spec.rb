@@ -28,16 +28,10 @@
 
 require 'spec_helper'
 
-describe NewsController do
-  it "should connect PUT /projects/:project/news/:news/preview to news#preview" do
-    put("/projects/1/news/preview").should route_to(controller: 'news',
-                                                    action: 'preview',
-                                                    project_id: '1')
-  end
-
-  it "should connect PUT /news/:news/preview to news#preview" do
-    put("/news/1/preview").should route_to(controller: 'news',
-                                           action: 'preview',
-                                           id: '1')
+describe PreviewsController do
+  it "should connect PUT /previews/1 to previews#update" do
+    put("/previews/1").should route_to(controller: 'previews',
+                                       action: 'update',
+                                       id: '1')
   end
 end
