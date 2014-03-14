@@ -51,6 +51,8 @@ OpenProject::Application.routes.draw do
     get '/logout', :action => 'logout', :as => 'signout'
   end
 
+  resources :previews, only: [:update]
+
   namespace :api do
 
     namespace :v1 do
