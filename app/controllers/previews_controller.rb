@@ -30,10 +30,12 @@
 class PreviewsController < ApplicationController
 
   before_filter :disable_api
-  before_filter :parse_preview_data
 
   def update
-    render :partial => 'common/preview'
+    texts, attachments, obj = parse_preview_data
+
+    render partial: 'common/preview',
+           locals: { texts: texts, attachments: attachments, previewed: obj }
   end
 
   private
@@ -41,8 +43,18 @@ class PreviewsController < ApplicationController
   def parse_preview_data
     preview_params = params.fetch(:preview)
     preview_object = preview_params.keys.first
-    preview_attribute = preview_params[preview_object]
+    preview_attributes = Array(preview_params[preview_object])
+    obj_id = params[:id].to_i
 
-    @text = params[preview_object][preview_attribute]
+    texts = preview_attributes.each_with_object([]) do |attribute, list|
+      text = params[preview_object][attribute]
+      list << text unless text.blank?
+    end
+
+    obj = obj_id ? preview_object.to_s.classify.constantize.find_by_id(obj_id) : nil
+
+    attachments = (obj && obj.respond_to?('attachable')) ? obj.attachments : nil
+
+    return texts, attachments, obj
   end
 end
