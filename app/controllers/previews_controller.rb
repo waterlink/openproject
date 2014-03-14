@@ -42,19 +42,45 @@ class PreviewsController < ApplicationController
 
   def parse_preview_data
     preview_params = params.fetch(:preview)
-    preview_object = preview_params.keys.first
-    preview_attributes = Array(preview_params[preview_object])
-    obj_id = params[:id].to_i
+    preview_object = preview_params[:param]
+    preview_attributes = Array(preview_params[:values])
 
     texts = preview_attributes.each_with_object([]) do |attribute, list|
       text = params[preview_object][attribute]
       list << text unless text.blank?
     end
 
-    obj = obj_id ? preview_object.to_s.classify.constantize.find_by_id(obj_id) : nil
+    obj = parse_previewed_object(preview_object, preview_params)
 
-    attachments = (obj && obj.respond_to?('attachable')) ? obj.attachments : nil
+    attachments = previewed_object_attachments(obj)
 
     return texts, attachments, obj
+  end
+
+  def parse_previewed_object(preview_object, preview_params)
+    preview_class = (preview_params[:class] ? preview_params[:class]
+                                            : preview_object.to_s.classify)
+
+    if preview_class
+      preview_class = preview_class.constantize
+
+      case [preview_class]
+      when [WikiPage]
+        project = Project.find(preview_params[:project_id])
+        project.wiki.find_page(params[:id]).content
+      else
+        obj_id = params[:id].to_i
+        obj_id ? preview_class.find_by_id(obj_id) : nil
+      end
+    end
+  end
+
+  def previewed_object_attachments(obj)
+    case obj.class
+    when WikiPage
+      obj.page.attachments
+    else
+      (obj && obj.respond_to?('attachable')) ? obj.attachments : nil
+    end
   end
 end

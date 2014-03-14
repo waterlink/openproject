@@ -52,7 +52,9 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= submit_tag l(:button_save) %>
   <%= link_to l(:button_cancel), "#", :onclick => 'Element.hide("edit-news"); return false;' %>
   <%= link_to l(:label_preview),
-                preview_path(@news, preview: { news: :description }),
+                preview_path(@news,
+                             preview: { param: :news,
+                                        values: :description }),
                 :class => 'preview',
                 :id => 'news-form-preview',
                 :accesskey => accesskey(:edit) %>

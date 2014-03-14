@@ -98,7 +98,9 @@ module ApplicationHelper
     id = options[:form_id] || 'work_package-form-preview'
 
     link_to l(:label_preview),
-              preview_path(context, preview: { work_package: [:description, :notes] }),
+              preview_path(context,
+                           preview: { param: :work_package,
+                                      values: [:description, :notes] }),
               :id => id,
               :class => 'preview button',
               :accesskey => accesskey(:preview)
