@@ -153,11 +153,4 @@ class MessagesController < ApplicationController
       page << "$('message_content').scrollTop = $('message_content').scrollHeight - $('message_content').clientHeight;"
     }
   end
-
-  def preview
-    message = @board.messages.find_by_id(params[:id])
-    @attachements = message.attachments if message
-    @text = (params[:message] || params[:reply])[:content]
-    render :partial => 'common/preview'
-  end
 end

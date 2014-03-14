@@ -36,7 +36,10 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= render :partial => 'form', :locals => {:f => f, :replying => !@message.parent.nil?} %>
   <%= submit_tag l(:button_save) %>
   <%= link_to l(:label_preview),
-                preview_topic_path(@message),
+                preview_path(@message,
+                             preview: { param: :message,
+                                        values: :content,
+                                        class: Message } ),
                 :class => 'preview',
                 :id => 'message-form-preview',
                 :accesskey => accesskey(:preview) %>

@@ -397,14 +397,10 @@ OpenProject::Application.routes.draw do
 
   resources :boards, :only => [] do
     resources :topics, :controller => 'messages', :except => [:index], :shallow => true do
-      collection do
-        post :preview
-      end
 
       member do
         get :quote
         post :reply, :as => 'reply_to'
-        post :preview
       end
     end
   end
