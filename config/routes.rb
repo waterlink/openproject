@@ -250,7 +250,6 @@ OpenProject::Application.routes.draw do
 
     resources :work_packages, :only => [:new, :create, :index] do
       get :new_type, :on => :collection
-      put :preview, :on => :collection
 
       collection do
         match '/report/:detail' => 'work_packages/reports#report_details', :via => :get
@@ -350,7 +349,6 @@ OpenProject::Application.routes.draw do
 
   resources :work_packages, :only => [:show, :edit, :update, :index] do
     get :new_type, :on => :member
-    put :preview, :on => :member
 
     resources :relations, :controller => 'work_package_relations', :only => [:create, :destroy]
 
