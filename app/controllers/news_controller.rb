@@ -33,10 +33,10 @@ class NewsController < ApplicationController
   default_search_scope :news
 
   before_filter :disable_api
-  before_filter :find_news_object, :except => [:new, :create, :index, :preview]
-  before_filter :find_project_from_association, :except => [:new, :create, :index, :preview]
+  before_filter :find_news_object, :except => [:new, :create, :index]
+  before_filter :find_project_from_association, :except => [:new, :create, :index]
   before_filter :find_project, :only => [:new, :create]
-  before_filter :authorize, :except => [:index, :preview]
+  before_filter :authorize, :except => [:index]
   before_filter :find_optional_project, :only => :index
   accept_key_auth :index
 
@@ -92,12 +92,6 @@ class NewsController < ApplicationController
   def destroy
     @news.destroy
     redirect_to :action => 'index', :project_id => @project
-  end
-
-  def preview
-    news_params = params.fetch(:news, {})
-    @text = news_params[:description]
-    render :partial => 'common/preview'
   end
 
 private
