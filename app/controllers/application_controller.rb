@@ -49,6 +49,12 @@ class ApplicationController < ActionController::Base
   class_attribute :_model_scope
   class_attribute :accept_key_auth_actions
 
+  before_filter :set_session_cookie_domain
+
+  def set_session_cookie_domain
+    request.session_options[:domain] = request.host
+  end
+
   protected
 
   include Redmine::I18n
