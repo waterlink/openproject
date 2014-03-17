@@ -159,3 +159,4 @@ describe NewsController do
       expect { news.reload }.to raise_error ActiveRecord::RecordNotFound
     end
   end
+end
