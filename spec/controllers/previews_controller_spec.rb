@@ -68,6 +68,19 @@ describe PreviewsController do
     it_behaves_like 'valid preview' do
       let(:texts) { ["Preview this description", "Preview this note"] }
     end
+
+    describe 'preview.js' do
+      before do
+        xhr :put, :update,
+            { id: project.id,
+              preview: { param: type,
+                         values: values } }.merge(params)
+      end
+
+      it { expect(response).to render_template('common/_preview',
+                                               format: ["html"],
+                                               layout: false ) }
+    end
   end
 
   describe 'message' do
