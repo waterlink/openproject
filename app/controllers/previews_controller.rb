@@ -64,23 +64,20 @@ class PreviewsController < ApplicationController
     if preview_class
       preview_class = preview_class.constantize
 
-      case [preview_class]
-      when [WikiPage]
-        project = Project.find(preview_params[:project_id])
-        project.wiki.find_page(params[:id]).content
-      else
-        obj_id = params[:id].to_i
-        obj_id ? preview_class.find_by_id(obj_id) : nil
-      end
+      obj_id = parse_previewed_id(preview_object)
+      obj_id ? preview_class.find_by_id(obj_id) : nil
     end
   end
 
+  def parse_previewed_id(preview_object)
+    param_id = params[preview_object][:previewed_id] || params[:id]
+    
+    (param_id.to_i == 0) ? param_id : param_id.to_i
+  end
+
   def previewed_object_attachments(obj)
-    case obj.class
-    when WikiPage
-      obj.page.attachments
-    else
-      (obj && obj.respond_to?('attachable')) ? obj.attachments : nil
-    end
+    is_attachable = obj && (obj.respond_to?('attachable') || obj.respond_to?('attachments'))
+
+    is_attachable ? obj.attachments : nil
   end
 end
