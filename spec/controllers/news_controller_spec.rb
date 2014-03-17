@@ -159,24 +159,3 @@ describe NewsController do
       expect { news.reload }.to raise_error ActiveRecord::RecordNotFound
     end
   end
-
-  describe "#preview" do
-    let(:description) { "News description" }
-
-    before do
-      put :preview,
-          project_id: 1,
-          news: { title: '',
-                  description: description,
-                  summary: '' }
-    end
-
-    it { expect(response).to be_success }
-
-    it { expect(response).to render_template('common/_preview') }
-
-    it { expect(response.body).to have_selector('fieldset.preview legend', text: 'Preview') }
-
-    it { expect(response.body).to have_selector('fieldset.preview', text: description) }
-  end
-end
