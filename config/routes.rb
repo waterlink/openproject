@@ -51,8 +51,6 @@ OpenProject::Application.routes.draw do
     get '/logout', :action => 'logout', :as => 'signout'
   end
 
-  resources :previews, only: [:update]
-
   namespace :api do
 
     namespace :v1 do
@@ -150,6 +148,7 @@ OpenProject::Application.routes.draw do
   post  'projects/:project_id/wiki/new' => 'wiki#create', :as => 'wiki_create'
   get   'projects/:project_id/wiki/:id/new' => 'wiki#new_child', :as => 'wiki_new_child'
   get   'projects/:project_id/wiki/:id/toc' => 'wiki#index', :as => 'wiki_page_toc'
+  put   'projects/:project_id/wiki/preview' => 'wiki#preview', as: 'preview_wiki'
   post  'projects/:id/wiki' => 'wikis#edit'
   match 'projects/:id/wiki/destroy' => 'wikis#destroy'
 
@@ -234,6 +233,7 @@ OpenProject::Application.routes.draw do
         get  :list_attachments
         get :select_main_menu_item, to: 'wiki_menu_items#select_main_menu_item'
         post :replace_main_menu_item, to: 'wiki_menu_items#replace_main_menu_item'
+        put :preview
       end
     end
     # as routes for index and show are swapped
@@ -345,6 +345,10 @@ OpenProject::Application.routes.draw do
     resource :bulk, :controller => 'bulk', :only => [:edit, :update, :destroy]
   end
 
+  resource :work_package, controller: 'work_packages', except: [:create, :new, :edit, :show, :update, :destroy] do
+    put :preview, as: 'preview_new'
+  end
+
   resources :work_packages, :only => [:show, :edit, :update, :index] do
     get :new_type, :on => :member
 
@@ -361,6 +365,8 @@ OpenProject::Application.routes.draw do
       resource :report, :controller => 'reports'
     end
     resources :time_entries, :controller => 'timelog'
+
+    put :preview, on: :member
   end
 
   resources :versions, :only => [:show, :edit, :update, :destroy] do
@@ -395,18 +401,29 @@ OpenProject::Application.routes.draw do
     end
   end
 
+  resource :topic, controller: 'messages', except: [:create, :new, :edit, :show, :update, :destroy] do
+    put :preview, as: 'preview_new'
+  end
+
   resources :boards, :only => [] do
     resources :topics, :controller => 'messages', :except => [:index], :shallow => true do
 
       member do
         get :quote
         post :reply, :as => 'reply_to'
+        put :preview
       end
     end
   end
 
+  resource :news, except: [:create, :new, :edit, :show, :update, :destroy] do
+    put :preview, as: 'preview_new'
+  end
+
   resources :news, :only => [:index, :destroy, :update, :edit, :show] do
     resources :comments, :controller => 'news/comments', :only => [:create, :destroy], :shallow => true
+
+    put :preview, on: :member
   end
 
 
