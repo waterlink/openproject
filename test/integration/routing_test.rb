@@ -245,11 +245,6 @@ class RoutingTest < ActionDispatch::IntegrationTest
       should route(:post, "/boards/lala/topics").to( :controller => 'messages',
                                                      :action => 'create',
                                                      :board_id => 'lala' )
-
-      should route(:post, "/boards/22/topics/preview").to( :controller => 'messages',
-                                                           :action => 'preview',
-                                                           :board_id => '22' )
-
     end
 
     should route(:get, "/topics/2").to( :controller => 'messages',
@@ -275,14 +270,6 @@ class RoutingTest < ActionDispatch::IntegrationTest
     should route(:post, "/topics/555/reply").to( :controller => 'messages',
                                                  :action => 'reply',
                                                  :id => '555' )
-
-    should route(:post, "/topics/2/preview").to( :controller => 'messages',
-                                                 :action => 'preview',
-                                                 :id => '2' )
-
-
-
-
   end
 
   context "news" do
@@ -633,10 +620,6 @@ class RoutingTest < ActionDispatch::IntegrationTest
                                                           :action => 'export',
                                                           :project_id => '567' )
 
-      should route(:post, "/projects/567/wiki/CookBook_documentation/preview").to( :controller => 'wiki',
-                                                                                   :action => 'preview',
-                                                                                   :project_id => '567',
-                                                                                   :id => 'CookBook_documentation' )
       should route(:put, "/projects/22/wiki/ladida/rename").to( :controller => 'wiki',
                                                                  :action => 'rename',
                                                                  :project_id => '22',
