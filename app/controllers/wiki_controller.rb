@@ -44,7 +44,7 @@ require 'htmldiff'
 # Other member and collection methods are also used
 #
 # TODO: still being worked on
-class WikiController < ApplicationController
+class WikiController < PreviewsController
   default_search_scope :wiki_pages
   before_filter :find_wiki, :authorize
   before_filter :find_existing_page, :only => [:edit_parent_page,
@@ -335,6 +335,25 @@ class WikiController < ApplicationController
     menu_item.present? ?
       :"#{menu_item.item_class}#{symbol_postfix}" :
       nil
+  end
+
+  protected
+
+  def parse_preview_data
+    page = @wiki.find_page(params[:id])
+    attachments = nil
+    previewed = nil
+    # page is nil when previewing a new page
+    return render_403 unless page.nil? || editable?(page)
+
+    if page
+      attachements = page.attachments
+      previewed = page.content
+    end
+
+    text = params[:content][:text]
+
+    return [text], attachments, previewed
   end
 
   private

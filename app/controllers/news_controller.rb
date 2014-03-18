@@ -27,16 +27,16 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class NewsController < ApplicationController
+class NewsController < PreviewsController
   include PaginationHelper
 
   default_search_scope :news
 
   before_filter :disable_api
-  before_filter :find_news_object, :except => [:new, :create, :index]
-  before_filter :find_project_from_association, :except => [:new, :create, :index]
+  before_filter :find_news_object, :except => [:new, :create, :index, :preview]
+  before_filter :find_project_from_association, :except => [:new, :create, :index, :preview]
   before_filter :find_project, :only => [:new, :create]
-  before_filter :authorize, :except => [:index]
+  before_filter :authorize, :except => [:index, :preview]
   before_filter :find_optional_project, :only => :index
   accept_key_auth :index
 
@@ -94,7 +94,13 @@ class NewsController < ApplicationController
     redirect_to :action => 'index', :project_id => @project
   end
 
-private
+  protected
+
+  def parse_preview_data
+    parse_preview_data_helper :news, :description
+  end
+
+  private
 
   def find_news_object
     @news = @object = News.find(params[:id].to_i)

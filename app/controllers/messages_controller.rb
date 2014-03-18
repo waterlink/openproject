@@ -27,7 +27,7 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class MessagesController < ApplicationController
+class MessagesController < PreviewsController
   menu_item :boards
   default_search_scope :messages
   model_object Message, :scope => Board
@@ -152,5 +152,11 @@ class MessagesController < ApplicationController
       page << "Element.scrollTo('reply');"
       page << "$('message_content').scrollTop = $('message_content').scrollHeight - $('message_content').clientHeight;"
     }
+  end
+
+  protected
+
+  def parse_preview_data
+    parse_preview_data_helper :message, :content
   end
 end

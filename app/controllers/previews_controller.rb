@@ -31,48 +31,41 @@ class PreviewsController < ApplicationController
 
   before_filter :disable_api
 
-  def update
+  def preview
     texts, attachments, obj = parse_preview_data
 
     render partial: 'common/preview',
            locals: { texts: texts, attachments: attachments, previewed: obj }
   end
 
-  private
+  protected
 
-  def parse_preview_data
-    preview_params = params.fetch(:preview)
-    preview_object = preview_params[:param]
-    preview_attributes = Array(preview_params[:values])
+  def parse_preview_data_helper(param_name, attributes, klass = nil)
+    klass ||= param_name.to_s.classify.constantize
 
-    texts = preview_attributes.each_with_object([]) do |attribute, list|
-      text = params[preview_object][attribute]
+    texts = Array(attributes).each_with_object([]) do |attribute, list|
+      text = params[param_name][attribute]
       list << text unless text.blank?
     end
 
-    obj = parse_previewed_object(preview_object, preview_params)
+    obj = parse_previewed_object(param_name, klass)
 
     attachments = previewed_object_attachments(obj)
 
     return texts, attachments, obj
   end
 
-  def parse_previewed_object(preview_object, preview_params)
-    preview_class = (preview_params[:class] ? preview_params[:class]
-                                            : preview_object.to_s.classify)
+  private
 
-    if preview_class
-      preview_class = preview_class.constantize
-
-      obj_id = parse_previewed_id(preview_object)
-      obj_id ? preview_class.find_by_id(obj_id) : nil
-    end
+  def parse_previewed_object(param_name, klass)
+    id = parse_previewed_id(param_name)
+    id ? klass.find_by_id(id) : nil
   end
 
-  def parse_previewed_id(preview_object)
-    param_id = params[preview_object][:previewed_id] || params[:id]
+  def parse_previewed_id(param_name)
+    id = params[param_name][:previewed_id] || params[:id]
     
-    (param_id.to_i == 0) ? param_id : param_id.to_i
+    (id.to_i == 0) ? id : id.to_i
   end
 
   def previewed_object_attachments(obj)

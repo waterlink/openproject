@@ -27,7 +27,7 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class WorkPackagesController < ApplicationController
+class WorkPackagesController < PreviewsController
   unloadable
 
   DEFAULT_SORT_ORDER = ['parent', 'desc']
@@ -52,9 +52,9 @@ class WorkPackagesController < ApplicationController
   accept_key_auth :index, :show, :create, :update
 
   before_filter :disable_api
-  before_filter :not_found_unless_work_package,
-                :project,
-                :authorize, :except => [:index]
+  before_filter :not_found_unless_work_package, :except => [:preview]
+  before_filter :project, :except => [:preview]
+  before_filter :authorize, :except => [:index, :preview]
   before_filter :find_optional_project,
                 :protect_from_unauthorized_export, :only => [:index, :all]
   before_filter :load_query, :only => :index
@@ -442,5 +442,9 @@ class WorkPackagesController < ApplicationController
     else
       super
     end
+  end
+
+  def parse_preview_data
+    parse_preview_data_helper :work_package, [:description, :notes]
   end
 end
