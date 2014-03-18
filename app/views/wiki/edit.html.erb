@@ -41,14 +41,10 @@ See doc/COPYRIGHT.rdoc for more details.
 <p><label><%=l(:label_attachment_plural)%></label><br /><%= render :partial => 'attachments/form' %></p>
 <p><%= submit_tag l(:button_save) %>
   <%= link_to l(:label_preview),
-                preview_path(@page,
-                             preview: { param: :content,
-                                        values: :text,
-                                        class: WikiContent,
-                                        project_id: @project.id }),
-                :class => 'preview',
-                :id => 'wiki_form',
-                :accesskey => accesskey(:edit) %>
+              preview_project_wiki_path(@project, @page),
+              :class => 'preview',
+              :id => 'wiki_form',
+              :accesskey => accesskey(:preview) %>
 </p>
 <%= wikitoolbar_for 'content_text' %>
 <% end %>

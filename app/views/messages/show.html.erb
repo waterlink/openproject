@@ -110,13 +110,10 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= render :partial => 'form', :locals => {:f => f, :replying => true} %>
   <%= submit_tag l(:button_submit) %>
   <%= link_to l(:label_preview),
-                preview_path(@message,
-                             preview: { param: :reply,
-                                        values: :content,
-                                        class: Message } ),
+                preview_topic_path(@message),
                 :class => 'preview',
                 :id => 'message-form',
-                :accesskey => accesskey(:edit) %>
+                :accesskey => accesskey(:preview) %>
 <% end %>
 <div id="preview" class="wiki"></div>
 </div>

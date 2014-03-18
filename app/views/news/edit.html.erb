@@ -35,11 +35,9 @@ See doc/COPYRIGHT.rdoc for more details.
   <%= render :partial => 'form', :locals => { :f => f } %>
   <%= submit_tag l(:button_save) %>
   <%= link_to l(:label_preview),
-                preview_path(@news,
-                             preview: { param: :news,
-                                        values: :description }),
+                preview_news_path(@news),
                 :class => 'preview',
                 :id => 'news-form-preview',
-                :accesskey => accesskey(:edit) %>
+                :accesskey => accesskey(:preview) %>
   <% end %>
 <div id="preview" class="wiki"></div>

@@ -72,13 +72,10 @@ See doc/COPYRIGHT.rdoc for more details.
   <p>
     <%= submit_tag l(:button_save) %>
     <%= link_to l(:label_preview),
-                  preview_path(@project,
-                               preview: { param: :content,
-                                          values: :text,
-                                          class: WikiContent }),
+                  preview_wiki_path,
                   :class => 'preview',
                   :id => 'wiki_form',
-                  :accesskey => accesskey(:edit) %>
+                  :accesskey => accesskey(:preview) %>
   </p>
 
   <%= wikitoolbar_for 'content_text' %>
