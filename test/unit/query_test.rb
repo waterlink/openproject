@@ -211,7 +211,7 @@ class QueryTest < ActiveSupport::TestCase
   end
 
   def test_filter_assigned_to_me
-    with_settings(:work_package_group_assignment => '1', :work_package_group_assignment => '1') do
+    with_settings(:work_package_group_assignment => '1') do
       project = FactoryGirl.create :project
       group = FactoryGirl.create(:group, :member_in_project => project)
       group_user_is_not_member_of = FactoryGirl.create(:group, :member_in_project => project)

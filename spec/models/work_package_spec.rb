@@ -102,13 +102,12 @@ describe WorkPackage do
         let(:group) { FactoryGirl.create(:group, :member_in_project => project) }
 
         before do
-          Setting.stub(:work_package_group_assignment).and_return(true)
           WorkPackageObserver.any_instance.stub(:send_notification).and_return false
         end
 
-        subject { FactoryGirl.create(:work_package,
+        subject { with_settings(:work_package_group_assignment => '1') { FactoryGirl.create(:work_package,
                                      :project => project, 
-                                     :assigned_to => group).assigned_to }
+                                     :assigned_to => group).assigned_to } }
 
         it { should eq(group) }
       end
