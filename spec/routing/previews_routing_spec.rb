@@ -29,9 +29,49 @@
 require 'spec_helper'
 
 describe PreviewsController do
-  it "should connect PUT /previews/1 to previews#update" do
-    put("/previews/1").should route_to(controller: 'previews',
-                                       action: 'update',
-                                       id: '1')
+  it "should connect PUT /projects/:project_id/wiki/preview to wiki#preview" do
+    put("/projects/1/wiki/preview").should route_to(controller: 'wiki',
+                                                    action: 'preview',
+                                                    project_id: '1')
+  end
+
+  it "should connect PUT /projects/:project_id/wiki/:id/preview to wiki#preview" do
+    put("/projects/1/wiki/1/preview").should route_to(controller: 'wiki',
+                                                      action: 'preview',
+                                                      project_id: '1',
+                                                      id: '1')
+  end
+
+  it "should connect PUT news/preview to news#preview" do
+    put("/news/preview").should route_to(controller: 'news',
+                                         action: 'preview')
+  end
+
+  it "should connect PUT /news/:id/preview to news#preview" do
+    put("/news/1/preview").should route_to(controller: 'news',
+                                           action: 'preview',
+                                           id: '1')
+  end
+
+  it "should connect PUT /topic/preview to messages#preview" do
+    put("/topic/preview").should route_to(controller: 'messages',
+                                          action: 'preview')
+  end
+
+  it "should connect PUT /topics/:id/preview to messages#preview" do
+    put("/topics/1/preview").should route_to(controller: 'messages',
+                                             action: 'preview',
+                                             id: '1')
+  end
+
+  it "should connect PUT /work_packages/preview to work_packages#preview" do
+    put("/work_package/preview").should route_to(controller: 'work_packages',
+                                                 action: 'preview')
+  end 
+
+  it "should connect PUT /work_packages/:id/preview to work_packages#preview" do
+    put("/work_packages/1/preview").should route_to(controller: 'work_packages',
+                                                    action: 'preview',
+                                                    id: '1')
   end
 end
