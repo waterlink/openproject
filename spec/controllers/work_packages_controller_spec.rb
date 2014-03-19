@@ -28,6 +28,7 @@
 #++
 
 require 'spec_helper'
+require 'support/shared/previews'
 
 describe WorkPackagesController do
 
@@ -1010,6 +1011,25 @@ describe WorkPackagesController do
           it { subject[:attachments] =~ /too long/ }
         end
       end
+    end
+  end
+
+  describe 'preview' do
+    let(:description) { "Work package description" }
+    let(:notes) { "Work package note" }
+    let(:preview_params) { { work_package: { description: description,
+                                             notes: notes } } }
+
+    it_behaves_like 'valid preview' do
+      let(:preview_texts) { [description, notes] }
+    end
+
+    describe 'preview.js' do
+      before { xhr :put, :preview, preview_params }
+
+      it { expect(response).to render_template('common/_preview',
+                                               format: ["html"],
+                                               layout: false ) }
     end
   end
 end
