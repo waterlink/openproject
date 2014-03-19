@@ -27,7 +27,8 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class MessagesController < PreviewsController
+class MessagesController < ApplicationController
+  include OpenProject::Concerns::Preview
   menu_item :boards
   default_search_scope :messages
   model_object Message, :scope => Board

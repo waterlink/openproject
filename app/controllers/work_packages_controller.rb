@@ -27,7 +27,7 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class WorkPackagesController < PreviewsController
+class WorkPackagesController < ApplicationController
   unloadable
 
   DEFAULT_SORT_ORDER = ['parent', 'desc']
@@ -48,6 +48,7 @@ class WorkPackagesController < PreviewsController
   include QueriesHelper
   include SortHelper
   include PaginationHelper
+  include OpenProject::Concerns::Preview
 
   accept_key_auth :index, :show, :create, :update
 

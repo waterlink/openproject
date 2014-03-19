@@ -27,8 +27,9 @@
 # See doc/COPYRIGHT.rdoc for more details.
 #++
 
-class NewsController < PreviewsController
+class NewsController < ApplicationController
   include PaginationHelper
+  include OpenProject::Concerns::Preview
 
   default_search_scope :news
 
