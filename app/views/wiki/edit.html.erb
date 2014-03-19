@@ -30,7 +30,6 @@ See doc/COPYRIGHT.rdoc for more details.
 <h2><%=h @page.pretty_title %></h2>
 
 <%= form_for @content, :as => :content, :url => {:action => 'update', :id => @page}, :html => {:method => :put, :multipart => true, :id => 'wiki_form'} do |f| %>
-<%= f.hidden_field :preview_id, value: @content.id %>
 <%= f.hidden_field :lock_version %>
 <%= error_messages_for 'content' %>
 
