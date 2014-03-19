@@ -31,7 +31,7 @@ class MessagesController < PreviewsController
   menu_item :boards
   default_search_scope :messages
   model_object Message, :scope => Board
-  before_filter :find_object_and_scope
+  before_filter :find_object_and_scope, except: [:preview]
   before_filter :authorize, :except => [:preview, :edit, :update, :destroy]
 
   include AttachmentsHelper
