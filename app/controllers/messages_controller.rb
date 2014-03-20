@@ -158,6 +158,10 @@ class MessagesController < ApplicationController
   protected
 
   def parse_preview_data
-    parse_preview_data_helper :message, :content
+    if params[:message]
+      parse_preview_data_helper :message, :content
+    else
+      parse_preview_data_helper :reply, :content, Message
+    end
   end
 end
