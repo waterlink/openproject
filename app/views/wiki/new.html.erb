@@ -71,11 +71,7 @@ See doc/COPYRIGHT.rdoc for more details.
 
   <p>
     <%= submit_tag l(:button_save) %>
-    <%= link_to l(:label_preview),
-                  preview_wiki_path(@project),
-                  :class => 'preview',
-                  :id => 'wiki_form',
-                  :accesskey => accesskey(:preview) %>
+    <%= preview_link preview_wiki_path(@project), 'wiki_form' %>
   </p>
 
   <%= wikitoolbar_for 'content_text' %>

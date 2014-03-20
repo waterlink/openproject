@@ -95,15 +95,11 @@ module ApplicationHelper
   end
 
   def link_to_work_package_preview(context = nil, options = {})
-    id = options[:form_id] || 'work_package-form-preview'
+    form_id = options[:form_id] || 'work_package-form-preview'
+    path = (context.is_a? WorkPackage) ? preview_work_package_path(context)
+                                       : preview_work_packages_path
 
-    link_to l(:label_preview),
-              (context.is_a? WorkPackage) ? preview_work_package_path(context)
-                                          : preview_new_work_package_path,
-              :id => id,
-              :class => 'preview button',
-              :accesskey => accesskey(:preview)
-
+    preview_link path, form_id, { class: 'preview button' }
   end
 
   # Show a sorted linkified (if active) comma-joined list of users
