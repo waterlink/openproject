@@ -101,6 +101,10 @@ class NewsController < ApplicationController
     parse_preview_data_helper :news, :description
   end
 
+  def parse_preview_id
+    params[:id].to_i
+  end
+
   private
 
   def find_news_object

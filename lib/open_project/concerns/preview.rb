@@ -47,7 +47,7 @@ module OpenProject::Concerns::Preview
       list << text unless text.blank?
     end
 
-    obj = parse_previewed_object(param_name, klass)
+    obj = parse_previewed_object(klass)
 
     attachments = previewed_object_attachments(obj)
 
@@ -56,15 +56,13 @@ module OpenProject::Concerns::Preview
 
   private
 
-  def parse_previewed_object(param_name, klass)
-    id = parse_previewed_id(param_name)
+  def parse_previewed_object(klass)
+    id = parse_previewed_id
     id ? klass.find_by_id(id) : nil
   end
 
-  def parse_previewed_id(param_name)
-    id = params[param_name][:previewed_id] || params[:id]
-    
-    (id.to_i == 0) ? id : id.to_i
+  def parse_previewed_id
+    params[:id]
   end
 
   def previewed_object_attachments(obj)
