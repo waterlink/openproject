@@ -1,0 +1,2 @@
+web: rails server Puma -p $PORT
+worker: script/delayed_job --number_of_workers=$WORKERS run
