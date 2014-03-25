@@ -73,10 +73,13 @@ class SearchController < ApplicationController
 
     # extract tokens from the question
     # eg. hello "bye bye" => ["hello", "bye bye"]
+    # NOTE: it is not even relatively readable
+    # maybe: @question.scan_query_tokens
     @tokens = @question.scan(%r{((\s|^)"[\s\w]+"(\s|$)|\S+)}).collect {|m| m.first.gsub(%r{(^\s*"\s*|\s*"\s*$)}, '')}
     # tokens must be at least 2 characters long
     @tokens = @tokens.uniq.select {|w| w.length > 1 }
 
+    # NOTE: @tokens.any?
     if !@tokens.empty?
       # no more than 5 tokens to search for
       @tokens.slice! 5..-1 if @tokens.size > 5

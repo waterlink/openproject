@@ -93,5 +93,43 @@ describe SearchController do
         end
       end
     end
+
+    context 'with notes' do
+      let!(:note_1) { create :work_package_journal,
+                             journable_id: work_package_1.id,
+                             notes: 'Test note 1',
+                             version: 2 }
+      let!(:note_2) { create :work_package_journal,
+                             journable_id: work_package_1.id,
+                             notes: 'Special note 2',
+                             version: 3 }
+
+      before { get :index, q: 'note', issues: 1 }
+
+      it_behaves_like 'successful search'
+
+      describe :result do
+
+        it { expect(assigns(:results).count).to be 1 }
+
+        it { expect(assigns(:results)).to include work_package_1 }
+
+        describe :view do
+          render_views
+
+          it 'highlights last note' do
+            assert_select 'dt.work_package-note + dd' do
+              assert_select '.description', text: note_2.notes
+            end
+          end
+
+          it 'links to work package with anchor to highlighted note' do
+            assert_select 'dt.work_package-note' do
+              assert_select 'a', href: work_package_path(work_package_1, anchor: 'note-2')
+            end
+          end
+        end
+      end
+    end
   end
 end

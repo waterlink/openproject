@@ -53,4 +53,20 @@ class SearchHelperTest < HelperTestCase
     r = highlight_tokens(s, %w(token))
     assert_equal  ('й' * 45) + ' ... ' + ('й' * 44) + ' <span class="highlight token-0">token</span> ' + ('й' * 44) + ' ... ' + ('й' * 45), r
   end
+
+  def test_highlight_first_when_first_is_highlighted
+    assert_equal 'This is a <span class="highlight token-0">token</span>',
+                 highlight_first([
+                                   'This is a token',
+                                   'I have some token for you'
+                                 ], %w(token))
+  end
+
+  def test_highlight_first_when_first_is_not_highlighted
+    assert_equal 'I have some <span class="highlight token-0">token</span> for you',
+                 highlight_first([
+                                   'This is a book',
+                                   'I have some token for you'
+                                 ], %w(token))
+  end
 end

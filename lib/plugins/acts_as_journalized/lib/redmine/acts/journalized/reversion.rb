@@ -81,7 +81,14 @@ module Redmine::Acts::Journalized
       end
 
       def last_journal
-        journals.last
+        # some eager loading may mess up the order
+        # journals.order('created_at').last will not work
+        # (especially when journals already filtered)
+        if journals.loaded?
+          journals.sort_by(&:version).last
+        else
+          journals.last
+        end
       end
 
       # Accepts a value corresponding to a specific journal record, builds a history of changes
